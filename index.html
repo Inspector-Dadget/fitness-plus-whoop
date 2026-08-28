@@ -109,6 +109,29 @@
       border-color: #2d8f68;
     }
 
+    .stack { display: grid; gap: 18px; }
+    .tabs {
+      display: flex;
+      background: var(--bg-input);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .tabs button {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background: var(--accent);
+      color: #062117;
+      font-weight: 700;
+    }
     .weights {
       display: grid;
       grid-template-columns: repeat(3, 1fr) auto;
@@ -116,6 +139,12 @@
       align-items: end;
     }
     @media (max-width: 640px) { .weights { grid-template-columns: 1fr 1fr; } }
+    .weight-field.unused label { opacity: 0.45; }
+    .weight-field.unused label::after { content: " (unused)"; }
+    input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
     .unit {
       display: flex;
       background: var(--bg-input);
@@ -189,6 +218,38 @@
       font-size: 0.92rem;
     }
     .hint { color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
+    .pick-row { margin-top: 12px; }
+    .pick-row:first-child { margin-top: 0; }
+    .pick-row[hidden], .pick-after-trainer[hidden] { display: none; }
+    .pick-after-trainer {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 10px;
+      align-items: end;
+      margin-top: 12px;
+    }
+    @media (max-width: 640px) { .pick-after-trainer { grid-template-columns: 1fr; } }
+    .pick-after-trainer .pick-row { margin-top: 0; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chips button {
+      border: 1px solid var(--line);
+      background: var(--bg-input);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .chips button.active {
+      background: var(--accent);
+      color: #062117;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
     .toast {
       position: fixed;
       right: 16px;
@@ -208,57 +269,97 @@
       <div class="badge">Apple Fitness+ to Whoop</div>
       <h1>Strength Trainer workout text</h1>
       <p>
-        Paste a Fitness+ workout link. This page looks up the moves in the
-        public Weekly Workouts SeaTable, fills in your dumbbell weights, and formats
-        the session the way Whoop asked for. Unofficial — not affiliated with
-        Apple or Whoop.
+        Pick a workout from the catalog or paste a Fitness+ link. This page
+        looks up the moves in the public Weekly Workouts SeaTable, fills in
+        your dumbbell weights, and formats the session the way Whoop asked
+        for. Unofficial — not affiliated with Apple or Whoop.
       </p>
     </header>
 
     <div class="grid">
       <section class="card">
         <h2>Workout</h2>
-        <label for="link">Apple Fitness+ workout link</label>
-        <input id="link" type="url" inputmode="url" placeholder="Paste link here">
+        <div class="tabs" role="tablist" aria-label="How to choose a workout">
+          <button type="button" id="tab-catalog" class="active" role="tab" aria-selected="true" aria-controls="panel-catalog">Catalog</button>
+          <button type="button" id="tab-link" role="tab" aria-selected="false" aria-controls="panel-link">Fitness+ link</button>
+        </div>
 
-        <div class="weights" style="margin-top:14px">
-          <div>
-            <label for="w-light">Light</label>
-            <input id="w-light" type="number" min="0" step="0.5">
+        <div id="panel-catalog" role="tabpanel">
+          <div class="pick-row">
+            <label>Type</label>
+            <div class="chips" id="pick-type" role="group" aria-label="Workout type"></div>
           </div>
-          <div>
-            <label for="w-medium">Medium</label>
-            <input id="w-medium" type="number" min="0" step="0.5">
+          <div class="pick-row" id="pick-trainer-wrap" hidden>
+            <label>Trainer</label>
+            <div class="chips" id="pick-trainer" role="group" aria-label="Trainer"></div>
           </div>
-          <div>
-            <label for="w-heavy">Heavy</label>
-            <input id="w-heavy" type="number" min="0" step="0.5">
-          </div>
-          <div>
-            <label>Unit</label>
-            <div class="unit" role="group" aria-label="Weight unit">
-              <button type="button" id="unit-lbs" class="active">lbs</button>
-              <button type="button" id="unit-kg">kg</button>
+          <div class="pick-after-trainer" id="pick-after-trainer" hidden>
+            <div class="pick-row">
+              <label>Duration</label>
+              <div class="chips" id="pick-duration" role="group" aria-label="Duration"></div>
+            </div>
+            <div class="pick-row">
+              <label for="pick-ep">Episode #</label>
+              <input id="pick-ep" type="number" min="1" step="1" inputmode="numeric">
             </div>
           </div>
-        </div>
-
-        <div class="actions">
-          <button class="primary" id="generate" type="button">Generate Whoop text</button>
-          <button class="ghost" id="clear" type="button">Clear</button>
-        </div>
-        <p class="hint">These numbers are written onto each loaded exercise (for example <code>@ 20 lb DBs</code>). They are saved in this browser.</p>
-      </section>
-
-      <section class="card">
-        <h2>Matches</h2>
-        <div id="statuses" class="status-list">
-          <div class="status">
-            <span class="pill">Ready</span>
-            <div class="meta">Paste a link and generate. Strength workouts usually have full move lists; Core and HIIT are more complete when the table has detailed notes.</div>
+          <div class="pick-row" id="pick-workout-wrap" hidden>
+            <label for="pick-workout">Episode</label>
+            <select id="pick-workout"></select>
           </div>
         </div>
+
+        <div id="panel-link" role="tabpanel" hidden>
+          <label for="link">Apple Fitness+ workout link</label>
+          <input id="link" type="url" inputmode="url" placeholder="Paste link here">
+          <p class="hint">Generate looks up the Apple page and matches it in the catalog.</p>
+        </div>
       </section>
+
+      <div class="stack">
+        <section class="card">
+          <h2>Matches</h2>
+          <div id="statuses" class="status-list">
+            <div class="status">
+              <span class="pill">Ready</span>
+              <div class="meta">Pick a catalog workout or paste a Fitness+ link. Strength workouts usually have full move lists; Core and HIIT are more complete when the table has detailed notes.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="setup-card">
+          <h2>Weights</h2>
+          <div id="weights-block" hidden>
+            <div class="weights">
+              <div class="weight-field">
+                <label for="w-light">Light</label>
+                <input id="w-light" type="number" min="0" step="0.5">
+              </div>
+              <div class="weight-field">
+                <label for="w-medium">Medium</label>
+                <input id="w-medium" type="number" min="0" step="0.5">
+              </div>
+              <div class="weight-field">
+                <label for="w-heavy">Heavy</label>
+                <input id="w-heavy" type="number" min="0" step="0.5">
+              </div>
+              <div>
+                <label>Unit</label>
+                <div class="unit" role="group" aria-label="Weight unit">
+                  <button type="button" id="unit-lbs" class="active">lbs</button>
+                  <button type="button" id="unit-kg">kg</button>
+                </div>
+              </div>
+            </div>
+            <p class="hint">These numbers are written onto each loaded exercise (for example <code>@ 20 lb DBs</code>). They are saved in this browser. Unused weights are disabled for this workout.</p>
+          </div>
+          <p class="hint" id="weights-empty">Weights appear when the selected workout uses dumbbells.</p>
+          <div class="actions">
+            <button class="primary" id="generate" type="button">Generate Whoop text</button>
+            <button class="ghost" id="clear" type="button">Clear</button>
+          </div>
+        </section>
+      </div>
     </div>
 
     <section class="card output-wrap">
@@ -280,6 +381,7 @@
   <script>
     const SEATABLE_LINK = "d08506897d274835bdab";
     const WEIGHT_KEY = "whoop-formatter-weights";
+    const SOURCE_KEY = "whoop-formatter-source";
     const DISCOVERED_KEY = "whoop-discovered-ids";
     const WORKOUT_TYPES = [
       { slug: "mindful-cooldown", table: "Mindful Cooldown" },
@@ -297,6 +399,8 @@
       { slug: "core", table: "Core" },
       { slug: "hiit", table: "HIIT" },
     ];
+    const CATALOG_TYPES = ["Strength", "Core", "HIIT", "Pilates", "Kickboxing"];
+    const DURATION_ORDER = ["5 min", "10 min", "20 min", "30 min", "45 min", "60 min"];
     const WORD_NUMBERS = {
       one: 1, two: 2, three: 3, four: 4, five: 5,
       six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
@@ -315,12 +419,28 @@
       output: document.getElementById("output"),
       statuses: document.getElementById("statuses"),
       toast: document.getElementById("toast"),
+      pickType: document.getElementById("pick-type"),
+      pickTrainer: document.getElementById("pick-trainer"),
+      pickTrainerWrap: document.getElementById("pick-trainer-wrap"),
+      pickAfterTrainer: document.getElementById("pick-after-trainer"),
+      pickDuration: document.getElementById("pick-duration"),
+      pickEp: document.getElementById("pick-ep"),
+      pickWorkout: document.getElementById("pick-workout"),
+      pickWorkoutWrap: document.getElementById("pick-workout-wrap"),
+      tabCatalog: document.getElementById("tab-catalog"),
+      tabLink: document.getElementById("tab-link"),
+      panelCatalog: document.getElementById("panel-catalog"),
+      panelLink: document.getElementById("panel-link"),
+      weightsBlock: document.getElementById("weights-block"),
+      weightsEmpty: document.getElementById("weights-empty"),
     };
 
     let unit = "lbs";
+    let sourceMode = "catalog";
     let seatable = { token: null, uuid: null, expires: 0 };
     const catalogTables = {};
     const sessionState = [];
+    const pick = { table: "", trainer: "", duration: "", ep: "", rowId: "" };
 
     function titleCaseName(value) {
       return String(value || "")
@@ -485,6 +605,256 @@
 
     function trainerOf(row, table) {
       return row[trainerColumn(table)] || row.Trainer || row.Guest || "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function catalogRows() {
+      return catalogTables[pick.table] || [];
+    }
+
+    function trainerRows() {
+      return catalogRows().filter((row) => trainerOf(row, pick.table) === pick.trainer);
+    }
+
+    function trainersForTable() {
+      return [...new Set(catalogRows().map((row) => trainerOf(row, pick.table)).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right));
+    }
+
+    function durationsForTrainer() {
+      const found = new Set(trainerRows().map((row) => row.Duration).filter(Boolean));
+      return DURATION_ORDER.filter((item) => found.has(item)).concat(
+        [...found].filter((item) => !DURATION_ORDER.includes(item)).sort()
+      );
+    }
+
+    function filteredPickRows() {
+      return trainerRows()
+        .filter((row) => !pick.duration || row.Duration === pick.duration)
+        .filter((row) => pick.ep === "" || String(row.Ep) === pick.ep)
+        .sort((left, right) => (
+          String(right.Date || "").localeCompare(String(left.Date || ""))
+          || Number(right.Ep || 0) - Number(left.Ep || 0)
+        ));
+    }
+
+    function episodeLabel(row, includeDuration = !pick.duration) {
+      return [
+        dateOnly(row.Date),
+        row.Ep != null && row.Ep !== "" ? `Ep${row.Ep}` : "",
+        row["Body Focus"] || "",
+        row.Music || "",
+        includeDuration ? (row.Duration || "") : "",
+      ].filter(Boolean).join(" • ");
+    }
+
+    function rowMeta(row, extra) {
+      return [
+        dateOnly(row?.Date),
+        row?.Duration,
+        row?.["Body Focus"],
+        row?.Music,
+        extra || row?.Format,
+      ].filter(Boolean).join(" • ");
+    }
+
+    function setSourceMode(mode, persist = true) {
+      sourceMode = mode === "link" ? "link" : "catalog";
+      const catalog = sourceMode === "catalog";
+      els.tabCatalog.classList.toggle("active", catalog);
+      els.tabLink.classList.toggle("active", !catalog);
+      els.tabCatalog.setAttribute("aria-selected", catalog ? "true" : "false");
+      els.tabLink.setAttribute("aria-selected", catalog ? "false" : "true");
+      els.panelCatalog.hidden = !catalog;
+      els.panelLink.hidden = catalog;
+      if (persist) localStorage.setItem(SOURCE_KEY, sourceMode);
+    }
+
+    function loadSourceMode() {
+      const saved = localStorage.getItem(SOURCE_KEY);
+      setSourceMode(saved === "link" ? "link" : "catalog", false);
+    }
+
+    function neededWeightClasses(row) {
+      if (row) {
+        if (!workoutUsesDumbbells(row)) return [];
+        const found = new Set(workoutWeightClasses(row));
+        const blob = moveSource(row);
+        for (const key of ["light", "medium", "heavy"]) {
+          if (new RegExp(`\\b${key}\\b`, "i").test(blob)) found.add(key);
+        }
+        return found.size
+          ? ["light", "medium", "heavy"].filter((key) => found.has(key))
+          : ["light", "medium", "heavy"];
+      }
+      if ((pick.table || sessionState[0]?.parsed?.table) === "Strength") {
+        return ["light", "medium", "heavy"];
+      }
+      return [];
+    }
+
+    function syncWeightUi() {
+      const classes = neededWeightClasses(sessionState[0]?.row || null);
+      const show = classes.length > 0;
+      els.weightsBlock.hidden = !show;
+      els.weightsEmpty.hidden = show;
+      ["light", "medium", "heavy"].forEach((key) => {
+        const on = classes.includes(key);
+        els[key].disabled = !on;
+        els[key].closest(".weight-field")?.classList.toggle("unused", !on);
+      });
+    }
+
+    function renderChipGroup(container, values, selected) {
+      container.innerHTML = values.map((value) => (
+        `<button type="button" data-value="${escapeHtml(value)}"${value === selected ? ' class="active"' : ""}>${escapeHtml(value)}</button>`
+      )).join("");
+    }
+
+    function resetPicker() {
+      pick.table = "";
+      pick.trainer = "";
+      pick.duration = "";
+      pick.ep = "";
+      pick.rowId = "";
+      els.pickEp.value = "";
+      renderPicker();
+    }
+
+    function renderPicker() {
+      renderChipGroup(els.pickType, CATALOG_TYPES, pick.table);
+      const hasTable = Boolean(pick.table && catalogRows().length);
+      els.pickTrainerWrap.hidden = !hasTable;
+      if (hasTable) renderChipGroup(els.pickTrainer, trainersForTable(), pick.trainer);
+
+      const hasTrainer = hasTable && Boolean(pick.trainer);
+      els.pickAfterTrainer.hidden = !hasTrainer;
+      if (hasTrainer) renderChipGroup(els.pickDuration, durationsForTrainer(), pick.duration);
+
+      const rows = hasTrainer ? filteredPickRows() : [];
+      const showList = hasTrainer && Boolean(pick.duration || pick.ep);
+      els.pickWorkoutWrap.hidden = !showList;
+      if (!showList) return;
+      const prompt = rows.length === 1
+        ? ""
+        : `<option value="">${rows.length} workouts — choose one</option>`;
+      els.pickWorkout.innerHTML = prompt + rows.map((row) => {
+        const selected = row._id === pick.rowId || rows.length === 1 ? " selected" : "";
+        return `<option value="${escapeHtml(row._id)}"${selected}>${escapeHtml(episodeLabel(row))}</option>`;
+      }).join("");
+    }
+
+    function parsedFromRow(row) {
+      const trainer = trainerOf(row, pick.table);
+      const slug = `${tableSlug(pick.table)}${trainer ? `-with-${String(trainer).toLowerCase().replace(/\s+/g, "-")}` : ""}`;
+      return {
+        url: row.Link || "",
+        id: row.appleId ? String(row.appleId) : "",
+        slug,
+        table: pick.table,
+        trainer,
+        typeSlug: tableSlug(pick.table),
+      };
+    }
+
+    function applyPickedRow(row) {
+      pick.rowId = row._id;
+      if (row.Duration) pick.duration = row.Duration;
+      if (row.Ep != null && row.Ep !== "") {
+        pick.ep = String(row.Ep);
+        els.pickEp.value = pick.ep;
+      }
+      els.link.value = "";
+      const parsed = parsedFromRow(row);
+      const epLabel = row.Ep != null && row.Ep !== "" ? ` • Ep${row.Ep}` : "";
+      sessionState.length = 0;
+      sessionState.push({
+        parsed,
+        apple: null,
+        row,
+        choices: [],
+        level: "ok",
+        pill: "Catalog",
+        title: row.Name || `${pick.table}${parsed.trainer ? ` with ${parsed.trainer}` : ""}${epLabel}`,
+        meta: rowMeta(row),
+      });
+      renderPicker();
+      rebuildOutput();
+      renderStatuses();
+    }
+
+    function clearGenerated() {
+      sessionState.length = 0;
+      els.output.value = "";
+      renderStatuses();
+    }
+
+    async function onPickType(table) {
+      pick.table = table;
+      pick.trainer = "";
+      pick.duration = "";
+      pick.ep = "";
+      pick.rowId = "";
+      els.pickEp.value = "";
+      clearGenerated();
+      renderPicker();
+      await loadTable(table);
+      if (!catalogRows().length) {
+        sessionState.push({
+          parsed: { table },
+          apple: null,
+          row: null,
+          choices: [],
+          level: "error",
+          pill: "Error",
+          title: table,
+          meta: `Could not load the ${table} catalog.`,
+        });
+        renderStatuses();
+        return;
+      }
+      renderPicker();
+    }
+
+    function onPickTrainer(trainer) {
+      pick.trainer = trainer;
+      pick.duration = "";
+      pick.ep = "";
+      pick.rowId = "";
+      els.pickEp.value = "";
+      clearGenerated();
+      renderPicker();
+    }
+
+    function onPickDuration(duration) {
+      pick.duration = duration;
+      pick.rowId = "";
+      clearGenerated();
+      const rows = filteredPickRows();
+      if (pick.ep && rows.length === 1) {
+        applyPickedRow(rows[0]);
+        return;
+      }
+      renderPicker();
+    }
+
+    function onPickEpisodeNumber() {
+      pick.ep = els.pickEp.value.trim();
+      pick.rowId = "";
+      if (!pick.ep && !pick.duration) clearGenerated();
+      renderPicker();
+    }
+
+    function commitEpisodeNumber() {
+      onPickEpisodeNumber();
+      const rows = filteredPickRows();
+      if (pick.ep && rows.length === 1) applyPickedRow(rows[0]);
     }
 
     function scoreCatalogRow(row, parsed, apple, table) {
@@ -1142,13 +1512,14 @@
 
     function renderStatuses() {
       if (!sessionState.length) {
-        els.statuses.innerHTML = `<div class="status"><span class="pill">Ready</span><div class="meta">Paste a link and generate.</div></div>`;
+        els.statuses.innerHTML = `<div class="status"><span class="pill">Ready</span><div class="meta">Pick a catalog workout or paste a Fitness+ link.</div></div>`;
+        syncWeightUi();
         return;
       }
       els.statuses.innerHTML = sessionState.map((item, index) => {
         const options = (item.choices || []).map((row, choiceIndex) => {
           const selected = item.row && item.row._id === row._id ? " selected" : "";
-          return `<option value="${choiceIndex}"${selected}>${row.Name || "Untitled"} • ${dateOnly(row.Date)} • ${row.Duration || "?"}</option>`;
+          return `<option value="${choiceIndex}"${selected}>${escapeHtml(episodeLabel(row, true) || row.Name || "Untitled")}</option>`;
         }).join("");
         const picker = item.choices && item.choices.length
           ? `<div style="margin-top:8px"><select data-index="${index}">${item.choices.length > 1 ? `<option value="">Choose the matching episode</option>` : ""}${options}</select></div>`
@@ -1171,12 +1542,13 @@
           item.level = "ok";
           item.pill = "Matched";
           item.title = choice.Name || item.parsed.slug;
-          item.meta = `${dateOnly(choice.Date)} • ${choice.Duration || ""} • ${choice.Format || choice.Music || ""}`.replace(/ • $/, "");
+          item.meta = rowMeta(choice);
           rememberDiscovery(item.parsed, item.apple, item.row);
           rebuildOutput();
           renderStatuses();
         });
       });
+      syncWeightUi();
     }
 
     function rebuildOutput() {
@@ -1191,7 +1563,23 @@
       return match ? match[0].replace(/[.,);]+$/, "") : String(value).trim();
     }
 
+    function selectedCatalogRow() {
+      const rows = pick.trainer ? filteredPickRows() : [];
+      return rows.find((row) => row._id === pick.rowId) || (rows.length === 1 ? rows[0] : null);
+    }
+
     async function generate() {
+      if (sourceMode === "catalog") {
+        const row = selectedCatalogRow();
+        if (row) {
+          applyPickedRow(row);
+          return;
+        }
+        sessionState.length = 0;
+        els.output.value = "";
+        renderStatuses();
+        return;
+      }
       const line = firstUrl(els.link.value);
       els.link.value = line;
       if (!line) {
@@ -1231,7 +1619,7 @@
           item.level = "ok";
           item.pill = "Matched";
           item.title = rows[0].Name || item.parsed.slug;
-          item.meta = `${dateOnly(rows[0].Date)} • ${rows[0].Duration || ""} • ${rows[0].Format || rows[0].Music || item.apple?.description || ""}`.replace(/ • $/, "");
+          item.meta = rowMeta(rows[0], rows[0].Format || item.apple?.description || "");
           rememberDiscovery(item.parsed, item.apple, item.row);
         } else {
           item.level = "warn";
@@ -1277,11 +1665,38 @@
         generate();
       }
     });
+    els.tabCatalog.addEventListener("click", () => setSourceMode("catalog"));
+    els.tabLink.addEventListener("click", () => setSourceMode("link"));
     els.generate.addEventListener("click", generate);
+    els.pickType.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (button) onPickType(button.dataset.value);
+    });
+    els.pickTrainer.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (button) onPickTrainer(button.dataset.value);
+    });
+    els.pickDuration.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (button) onPickDuration(button.dataset.value);
+    });
+    els.pickEp.addEventListener("input", onPickEpisodeNumber);
+    els.pickEp.addEventListener("blur", commitEpisodeNumber);
+    els.pickEp.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitEpisodeNumber();
+      }
+    });
+    els.pickWorkout.addEventListener("change", () => {
+      const row = filteredPickRows().find((item) => item._id === els.pickWorkout.value);
+      if (row) applyPickedRow(row);
+    });
     els.clear.addEventListener("click", () => {
       els.link.value = "";
-      els.output.value = "";
+      resetPicker();
       sessionState.length = 0;
+      els.output.value = "";
       renderStatuses();
     });
     els.copy.addEventListener("click", async () => {
@@ -1298,6 +1713,8 @@
     });
 
     loadWeights();
+    loadSourceMode();
+    renderPicker();
   </script>
 </body>
 </html>
