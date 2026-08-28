@@ -89,7 +89,7 @@
     }
 
     label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
-    textarea, input[type="number"], select {
+    textarea, input[type="url"], input[type="number"], select {
       width: 100%;
       background: var(--bg-input);
       color: var(--text);
@@ -97,6 +97,10 @@
       border-radius: 10px;
       padding: 11px 12px;
       font: inherit;
+    }
+    textarea::placeholder, input::placeholder {
+      color: var(--muted);
+      opacity: 1;
     }
     textarea { min-height: 128px; resize: vertical; line-height: 1.45; }
     #link { min-height: 0; }
@@ -215,20 +219,20 @@
       <section class="card">
         <h2>Workout</h2>
         <label for="link">Apple Fitness+ workout link</label>
-        <input id="link" type="url" inputmode="url" placeholder="https://fitness.apple.com/us/workout/strength-with-gregg/1885659281">
+        <input id="link" type="url" inputmode="url" placeholder="Paste link here">
 
         <div class="weights" style="margin-top:14px">
           <div>
             <label for="w-light">Light</label>
-            <input id="w-light" type="number" min="0" step="0.5" placeholder="15">
+            <input id="w-light" type="number" min="0" step="0.5">
           </div>
           <div>
             <label for="w-medium">Medium</label>
-            <input id="w-medium" type="number" min="0" step="0.5" placeholder="25">
+            <input id="w-medium" type="number" min="0" step="0.5">
           </div>
           <div>
             <label for="w-heavy">Heavy</label>
-            <input id="w-heavy" type="number" min="0" step="0.5" placeholder="35">
+            <input id="w-heavy" type="number" min="0" step="0.5">
           </div>
           <div>
             <label>Unit</label>
