@@ -1,0 +1,11 @@
+{
+  "updatedAt": "2026-08-28T06:01:50Z",
+  "source": "https://cloud.seatable.io/dtable/external-links/d08506897d274835bdab/",
+  "files": {
+    "Strength": "strength.jsonl",
+    "Core": "core.jsonl",
+    "HIIT": "hiit.jsonl",
+    "Pilates": "pilates.jsonl",
+    "Kickboxing": "kickboxing.jsonl"
+  }
+}

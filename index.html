@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Whoop Workout Formatter</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --bg-elev: #14181f;
+      --bg-input: #1b2029;
+      --line: #2a3140;
+      --text: #eef2f7;
+      --muted: #93a0b5;
+      --accent: #3ee0a2;
+      --accent-dim: #1a3d32;
+      --warn: #f5c16c;
+      --danger: #ff7b8a;
+      --chip: #222833;
+      --radius: 14px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(900px 500px at 10% -10%, #163528 0%, transparent 55%),
+        radial-gradient(800px 400px at 110% 0%, #2a1830 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    header { margin-bottom: 28px; }
+    header p { color: var(--muted); max-width: 70ch; line-height: 1.5; }
+    footer {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      max-width: 70ch;
+    }
+    footer a { color: var(--accent); }
+    h1 {
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+      margin: 0 0 8px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid #2d6b55;
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-bottom: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    textarea, input[type="number"], select {
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font: inherit;
+    }
+    textarea { min-height: 128px; resize: vertical; line-height: 1.45; }
+    #link { min-height: 0; }
+    textarea:focus, input:focus, select:focus {
+      outline: 2px solid #2d8f68;
+      border-color: #2d8f68;
+    }
+
+    .weights {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+    @media (max-width: 640px) { .weights { grid-template-columns: 1fr 1fr; } }
+    .unit {
+      display: flex;
+      background: var(--bg-input);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      height: 42px;
+    }
+    .unit button {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      min-width: 48px;
+    }
+    .unit button.active { background: var(--accent); color: #062117; font-weight: 700; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    button.primary, button.ghost {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font: inherit;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #062117; font-weight: 700; }
+    button.primary:disabled { opacity: 0.55; cursor: wait; }
+    button.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .status-list { display: grid; gap: 10px; }
+    .status {
+      border: 1px solid var(--line);
+      background: var(--chip);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .status h3 { margin: 0 0 4px; font-size: 1rem; }
+    .status .meta { color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+    .status.error { border-color: #5a2a32; }
+    .status.warn { border-color: #5a4a24; }
+    .status.ok { border-color: #275644; }
+    .pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      background: #2a3140;
+      color: var(--muted);
+    }
+    .status.ok .pill { background: var(--accent-dim); color: var(--accent); }
+    .status.warn .pill { background: #3d3418; color: var(--warn); }
+    .status.error .pill { background: #3d1c22; color: var(--danger); }
+
+    .output-wrap { margin-top: 18px; }
+    .output-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    #output {
+      min-height: 340px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92rem;
+    }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: var(--accent);
+      color: #062117;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">Apple Fitness+ to Whoop</div>
+      <h1>Strength Trainer workout text</h1>
+      <p>
+        Paste a Fitness+ workout link. This page looks up the moves in the
+        public Weekly Workouts SeaTable, fills in your dumbbell weights, and formats
+        the session the way Whoop asked for. Unofficial — not affiliated with
+        Apple or Whoop.
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Workout</h2>
+        <label for="link">Apple Fitness+ workout link</label>
+        <input id="link" type="url" inputmode="url" placeholder="https://fitness.apple.com/us/workout/strength-with-gregg/1885659281">
+
+        <div class="weights" style="margin-top:14px">
+          <div>
+            <label for="w-light">Light</label>
+            <input id="w-light" type="number" min="0" step="0.5" placeholder="15">
+          </div>
+          <div>
+            <label for="w-medium">Medium</label>
+            <input id="w-medium" type="number" min="0" step="0.5" placeholder="25">
+          </div>
+          <div>
+            <label for="w-heavy">Heavy</label>
+            <input id="w-heavy" type="number" min="0" step="0.5" placeholder="35">
+          </div>
+          <div>
+            <label>Unit</label>
+            <div class="unit" role="group" aria-label="Weight unit">
+              <button type="button" id="unit-lbs" class="active">lbs</button>
+              <button type="button" id="unit-kg">kg</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="generate" type="button">Generate Whoop text</button>
+          <button class="ghost" id="clear" type="button">Clear</button>
+        </div>
+        <p class="hint">These numbers are written onto each loaded exercise (for example <code>@ 20 lb DBs</code>). They are saved in this browser.</p>
+      </section>
+
+      <section class="card">
+        <h2>Matches</h2>
+        <div id="statuses" class="status-list">
+          <div class="status">
+            <span class="pill">Ready</span>
+            <div class="meta">Paste a link and generate. Strength workouts usually have full move lists; Core and HIIT are more complete when the table has detailed notes.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card output-wrap">
+      <div class="output-head">
+        <h2 style="margin:0">Whoop text</h2>
+        <button class="ghost" id="copy" type="button">Copy</button>
+      </div>
+      <textarea id="output" placeholder="Generated workout text will appear here. You can edit it before copying."></textarea>
+      <p class="hint">Sets, reps, and hold times are estimates from the class format. Edit them if your pace was different.</p>
+    </section>
+    <footer>
+      Unofficial and not affiliated with Apple or Whoop.
+      Code is <a href="LICENSE">AGPL-3.0</a>.
+      Move lists come from the public Weekly Workouts SeaTable.
+    </footer>
+  </div>
+  <div class="toast" id="toast">Copied</div>
+
+  <script>
+    const SEATABLE_LINK = "d08506897d274835bdab";
+    const WEIGHT_KEY = "whoop-formatter-weights";
+    const DISCOVERED_KEY = "whoop-discovered-ids";
+    const WORKOUT_TYPES = [
+      { slug: "mindful-cooldown", table: "Mindful Cooldown" },
+      { slug: "time-to-walk", table: "Time to Walk" },
+      { slug: "time-to-run", table: "Time to Run" },
+      { slug: "kickboxing", table: "Kickboxing" },
+      { slug: "treadmill", table: "Treadmill" },
+      { slug: "strength", table: "Strength" },
+      { slug: "pilates", table: "Pilates" },
+      { slug: "cycling", table: "Cycling" },
+      { slug: "rowing", table: "Rowing" },
+      { slug: "meditation", table: "Meditation" },
+      { slug: "dance", table: "Dance" },
+      { slug: "yoga", table: "Yoga" },
+      { slug: "core", table: "Core" },
+      { slug: "hiit", table: "HIIT" },
+    ];
+    const WORD_NUMBERS = {
+      one: 1, two: 2, three: 3, four: 4, five: 5,
+      six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    };
+
+    const els = {
+      link: document.getElementById("link"),
+      light: document.getElementById("w-light"),
+      medium: document.getElementById("w-medium"),
+      heavy: document.getElementById("w-heavy"),
+      lbs: document.getElementById("unit-lbs"),
+      kg: document.getElementById("unit-kg"),
+      generate: document.getElementById("generate"),
+      clear: document.getElementById("clear"),
+      copy: document.getElementById("copy"),
+      output: document.getElementById("output"),
+      statuses: document.getElementById("statuses"),
+      toast: document.getElementById("toast"),
+    };
+
+    let unit = "lbs";
+    let seatable = { token: null, uuid: null, expires: 0 };
+    const catalogTables = {};
+    const sessionState = [];
+
+    function titleCaseName(value) {
+      return String(value || "")
+        .split("-")
+        .map((part) => part ? part[0].toUpperCase() + part.slice(1).toLowerCase() : "")
+        .join("-");
+    }
+
+    function escapeSql(value) {
+      return String(value).replace(/'/g, "''");
+    }
+
+    function dateOnly(value) {
+      if (!value) return "";
+      return String(value).slice(0, 10);
+    }
+
+    function durationLabelFromMs(ms) {
+      const minutes = Number(ms) / 60000;
+      const options = [5, 10, 20, 30, 45, 60];
+      let best = 30;
+      let bestDiff = Infinity;
+      for (const option of options) {
+        const diff = Math.abs(minutes - option);
+        if (diff < bestDiff) {
+          best = option;
+          bestDiff = diff;
+        }
+      }
+      return `${best} min`;
+    }
+
+    function parseMinutes(label, fallbackMs) {
+      const match = String(label || "").match(/(\d+)/);
+      if (match) return Number(match[1]);
+      if (fallbackMs) return Math.round(Number(fallbackMs) / 60000);
+      return 20;
+    }
+
+    function formatClock(seconds) {
+      const rounded = Math.max(15, Math.round(seconds / 15) * 15);
+      const mins = Math.floor(rounded / 60);
+      const secs = rounded % 60;
+      return `${mins}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function loadWeights() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(WEIGHT_KEY) || "{}");
+        els.light.value = saved.light || "";
+        els.medium.value = saved.medium || "";
+        els.heavy.value = saved.heavy || "";
+        unit = saved.unit === "kg" ? "kg" : "lbs";
+        els.lbs.classList.toggle("active", unit === "lbs");
+        els.kg.classList.toggle("active", unit === "kg");
+      } catch (_) { /* ignore broken storage */ }
+    }
+
+    function saveWeights() {
+      localStorage.setItem(WEIGHT_KEY, JSON.stringify({
+        light: els.light.value,
+        medium: els.medium.value,
+        heavy: els.heavy.value,
+        unit,
+      }));
+    }
+
+    function currentWeights() {
+      return {
+        light: els.light.value.trim(),
+        medium: els.medium.value.trim(),
+        heavy: els.heavy.value.trim(),
+        unit,
+      };
+    }
+
+    function parseWorkoutUrl(raw) {
+      const trimmed = raw.trim();
+      const url = new URL(trimmed);
+      const parts = url.pathname.split("/").filter(Boolean);
+      const workoutIndex = parts.findIndex((part) => part === "workout");
+      const slug = workoutIndex >= 0 ? parts[workoutIndex + 1] || "" : "";
+      const id = workoutIndex >= 0 ? parts[workoutIndex + 2] || "" : "";
+      const type = WORKOUT_TYPES.find((entry) => slug.startsWith(entry.slug));
+      let trainer = "";
+      if (type && slug.includes("-with-")) {
+        trainer = titleCaseName(slug.slice(slug.indexOf("-with-") + 6));
+      }
+      return {
+        url: trimmed,
+        id,
+        slug,
+        table: type ? type.table : null,
+        trainer,
+        typeSlug: type ? type.slug : null,
+      };
+    }
+
+    function trainerColumn(table) {
+      return table === "Time to Walk" ? "Guest" : "Trainer";
+    }
+
+    function tableSlug(table) {
+      return String(table || "").toLowerCase().replace(/\s+/g, "-");
+    }
+
+    async function loadTable(table) {
+      if (!table) return [];
+      if (catalogTables[table]) return catalogTables[table];
+      try {
+        const response = await fetch(`data/${tableSlug(table)}.jsonl`, { cache: "no-store" });
+        if (!response.ok) {
+          catalogTables[table] = [];
+          return catalogTables[table];
+        }
+        const text = await response.text();
+        catalogTables[table] = text.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+        applyDiscoveries(table, catalogTables[table]);
+      } catch (_) {
+        catalogTables[table] = [];
+      }
+      return catalogTables[table];
+    }
+
+    function loadDiscoveries() {
+      try {
+        const items = JSON.parse(localStorage.getItem(DISCOVERED_KEY) || "[]");
+        return Array.isArray(items) ? items : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function applyDiscoveries(table, rows) {
+      const discoveries = loadDiscoveries().filter((item) => item.table === table && item.appleId);
+      for (const item of discoveries) {
+        const match = rows.find((row) => {
+          if (row.appleId && row.appleId === item.appleId) return true;
+          if (item.ep != null && Number(row.Ep) === Number(item.ep) && trainerOf(row, table) === item.trainer) return true;
+          return item.date && dateOnly(row.Date) === item.date && trainerOf(row, table) === item.trainer
+            && (!item.duration || row.Duration === item.duration);
+        });
+        if (match && !match.appleId) match.appleId = String(item.appleId);
+      }
+    }
+
+    function rememberDiscovery(parsed, apple, row) {
+      if (!parsed?.id || !parsed.table) return;
+      const next = {
+        table: parsed.table,
+        appleId: String(parsed.id),
+        date: dateOnly(row?.Date || apple?.releaseDate),
+        trainer: parsed.trainer || apple?.trainer || trainerOf(row || {}, parsed.table),
+        ep: row?.Ep ?? apple?.episodeNumber ?? null,
+        duration: row?.Duration || apple?.durationLabel || "",
+      };
+      const items = loadDiscoveries().filter((item) => !(item.table === next.table && item.appleId === next.appleId));
+      items.push(next);
+      localStorage.setItem(DISCOVERED_KEY, JSON.stringify(items));
+      if (row && !row.appleId) row.appleId = next.appleId;
+    }
+
+    function trainerOf(row, table) {
+      return row[trainerColumn(table)] || row.Trainer || row.Guest || "";
+    }
+
+    function scoreCatalogRow(row, parsed, apple, table) {
+      let score = 0;
+      if (parsed.id && (row.appleId === parsed.id || (row.Link && String(row.Link).includes(parsed.id)))) score += 20;
+      if (apple?.releaseDate && dateOnly(row.Date) === apple.releaseDate) score += 8;
+      if (apple?.durationLabel && row.Duration === apple.durationLabel) score += 4;
+      if (apple?.music && row.Music === apple.music) score += 3;
+      if (apple?.episodeNumber != null && Number(row.Ep) === Number(apple.episodeNumber)) score += 2;
+      if (apple?.releaseDate) {
+        const diff = Math.abs(new Date(dateOnly(row.Date)) - new Date(apple.releaseDate));
+        if (diff <= 7 * 86400000) score += 1;
+      }
+      const trainer = parsed.trainer || apple?.trainer;
+      if (trainer && trainerOf(row, table) === trainer) score += 1;
+      return score;
+    }
+
+    function findInCatalog(parsed, apple) {
+      const rows = catalogTables[parsed.table] || [];
+      if (!rows.length) return [];
+      if (parsed.id) {
+        const byId = rows.filter((row) => row.appleId === parsed.id || (row.Link && String(row.Link).includes(parsed.id)));
+        if (byId.length) return byId;
+      }
+      const trainer = parsed.trainer || apple?.trainer;
+      const pool = trainer ? rows.filter((row) => trainerOf(row, parsed.table) === trainer) : rows;
+      if (!pool.length) return rows.slice(0, 12);
+      if (apple?.releaseDate) {
+        const onDate = pool.filter((row) => dateOnly(row.Date) === apple.releaseDate);
+        if (onDate.length === 1) return onDate;
+        if (onDate.length > 1) {
+          const sameDuration = onDate.filter((row) => row.Duration === apple.durationLabel);
+          return sameDuration.length ? sameDuration : onDate;
+        }
+      }
+      const scored = pool.map((row) => ({ row, score: scoreCatalogRow(row, parsed, apple, parsed.table) }));
+      scored.sort((a, b) => b.score - a.score || String(b.row.Date).localeCompare(String(a.row.Date)));
+      const confident = scored.filter((item) => item.score >= 7);
+      if (confident.length === 1) return [confident[0].row];
+      if (confident.length > 1) {
+        const tighter = confident.filter((item) => item.score >= 12);
+        return (tighter.length ? tighter : confident).map((item) => item.row);
+      }
+      return scored.slice(0, 15).map((item) => item.row);
+    }
+
+    async function getSeaTableAuth() {
+      if (seatable.token && Date.now() < seatable.expires - 60_000) return seatable;
+      // The dedicated access-token endpoint returns a token the SQL API rejects.
+      // The public external-link page embeds a working read token and allows CORS.
+      const response = await fetch(
+        `https://cloud.seatable.io/dtable/external-links/${SEATABLE_LINK}/`
+      );
+      if (!response.ok) throw new Error(`SeaTable page request failed (${response.status})`);
+      const html = await response.text();
+      const token = html.match(/accessToken:\s*'([^']+)'/);
+      const uuid = html.match(/dtableUuid:\s*'([^']+)'/);
+      if (!token || !uuid) throw new Error("Could not read the SeaTable access token from the public base");
+      seatable = {
+        token: token[1],
+        uuid: uuid[1],
+        expires: Date.now() + 50 * 60 * 1000,
+      };
+      return seatable;
+    }
+
+    async function seatableSql(sql) {
+      const auth = await getSeaTableAuth();
+      const response = await fetch(
+        `https://cloud.seatable.io/api-gateway/api/v2/dtables/${auth.uuid}/sql/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sql, convert_keys: true }),
+        }
+      );
+      if (!response.ok) throw new Error(`SeaTable query failed (${response.status})`);
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error_message || "SeaTable query error");
+      return data.results || [];
+    }
+
+    async function fetchViaProxy(url) {
+      const attempts = [
+        async () => {
+          const response = await fetch(`https://r.jina.ai/${url}`, {
+            headers: { "X-Return-Format": "html", Accept: "text/html" },
+            signal: AbortSignal.timeout(12000),
+          });
+          if (!response.ok) throw new Error(`jina ${response.status}`);
+          return response.text();
+        },
+        async () => {
+          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {
+            signal: AbortSignal.timeout(8000),
+          });
+          if (!response.ok) throw new Error(`allorigins ${response.status}`);
+          return response.text();
+        },
+        async () => {
+          const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, {
+            signal: AbortSignal.timeout(8000),
+          });
+          if (!response.ok) throw new Error(`corsproxy ${response.status}`);
+          return response.text();
+        },
+      ];
+      let lastError = null;
+      for (const attempt of attempts) {
+        try {
+          const text = await attempt();
+          if (
+            text.includes("shoebox-media-api-cache-amp-fitness") ||
+            text.includes("releaseDate") ||
+            text.includes("og:title")
+          ) {
+            return text;
+          }
+          throw new Error("proxy returned unexpected HTML");
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("Could not load Apple Fitness+ page");
+    }
+
+    function unescapeHtml(value) {
+      return value
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&");
+    }
+
+    function parseOgBits(html) {
+      const match = html.match(/property="og:title"\s+content="([^"]+)"/i)
+        || html.match(/^Title:\s*(.+)$/m);
+      if (!match) return {};
+      const clean = match[1].replace(/[\u200e\u2060\u2068\u2069]/g, "").trim();
+      const parts = clean.split("•").map((part) => part.trim()).filter(Boolean);
+      const minutes = parts[1] && parts[1].match(/(\d+)/);
+      return {
+        name: parts[0] || "",
+        music: parts[2] || "",
+        durationLabel: minutes ? durationLabelFromMs(Number(minutes[1]) * 60000) : "",
+      };
+    }
+
+    function parseApplePage(html) {
+      const og = parseOgBits(html);
+      const match = html.match(
+        /<script type="fastboot\/shoebox" id="shoebox-media-api-cache-amp-fitness">([\s\S]*?)<\/script>/
+      );
+      if (!match) {
+        if (!og.name) throw new Error("Apple workout metadata was not in the page");
+        const withMatch = og.name.match(/\bwith\s+(.+)$/i);
+        return {
+          id: "",
+          name: og.name,
+          trainer: withMatch ? withMatch[1] : "",
+          releaseDate: "",
+          durationMs: 0,
+          durationLabel: og.durationLabel,
+          episodeNumber: null,
+          description: "",
+          bodyFocus: "",
+          music: og.music,
+        };
+      }
+      const cache = JSON.parse(unescapeHtml(match[1]));
+      const first = JSON.parse(Object.values(cache)[0]);
+      const item = first.d && first.d[0];
+      if (!item || !item.attributes) throw new Error("Apple workout JSON was incomplete");
+      const attrs = item.attributes;
+      const name = attrs.name || og.name || "";
+      const withMatch = name.match(/\bwith\s+(.+)$/i);
+      return {
+        id: item.id,
+        name,
+        trainer: withMatch ? withMatch[1] : "",
+        releaseDate: attrs.releaseDate || "",
+        durationMs: attrs.durationInMilliseconds || 0,
+        durationLabel: durationLabelFromMs(attrs.durationInMilliseconds || 0) || og.durationLabel,
+        episodeNumber: attrs.episodeNumber ?? null,
+        description: (attrs.description && attrs.description.standard) || "",
+        bodyFocus: (attrs.bodyFocuses && attrs.bodyFocuses[0]) || "",
+        music: og.music || "",
+      };
+    }
+
+    function parseFormat(format) {
+      const text = Array.isArray(format) ? format.join(" • ") : String(format || "");
+      const num = (re) => {
+        const match = text.match(re);
+        return match ? Number(match[1]) : null;
+      };
+      const once = /once through/i.test(text);
+      const rounds = num(/(\d+)\s*rounds?/i);
+      const sets = num(/(\d+)\s*sets/i);
+      return {
+        text,
+        moves: num(/(\d+)\s*moves?/i),
+        rounds: rounds ?? sets ?? (once ? 1 : null),
+        blocks: num(/(\d+)\s*blocks?/i),
+        sets,
+        once,
+        irregular: /once\b|twice\b|reverse order/i.test(text) && !rounds,
+      };
+    }
+
+    function parseCountWord(value) {
+      if (!value) return null;
+      if (WORD_NUMBERS[value.toLowerCase()]) return WORD_NUMBERS[value.toLowerCase()];
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    }
+
+    function parseRoundsFromText(...texts) {
+      const blob = texts.filter(Boolean).join(" ");
+      const done = blob.match(/done\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+times/i);
+      if (done) return parseCountWord(done[1]);
+      const digit = blob.match(/(\d+)\s+rounds?/i);
+      if (digit) return Number(digit[1]);
+      const word = blob.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+rounds?/i);
+      if (word) return WORD_NUMBERS[word[1].toLowerCase()];
+      return null;
+    }
+
+    function parseMoveLine(raw) {
+      const weightRe = /\b(light|medium|heavy|bodyweight)\b/gi;
+      const matches = [...raw.matchAll(weightRe)];
+      const weightClass = matches.length ? matches[matches.length - 1][1].toLowerCase() : null;
+      const name = raw
+        .replace(/,?\s*\b(light|medium|heavy|bodyweight)\b/gi, "")
+        .replace(/\(\s*,/g, "(")
+        .replace(/,\s*\)/g, ")")
+        .replace(/\(\s*\)/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      return { name, weightClass, raw };
+    }
+
+    function parseDetailedMoves(text) {
+      if (!text) return [];
+      const lines = String(text).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      const looksLikeMoves = lines.some((line) => /^\d+[.)]/.test(line));
+      if (!looksLikeMoves) return [];
+      const blocks = [];
+      let current = { title: null, moves: [], forceAlt: false };
+      for (const line of lines) {
+        const blockMatch = line.match(/^block\s+(\d+)\b(.*)$/i);
+        if (blockMatch) {
+          if (current.title || current.moves.length) blocks.push(current);
+          current = {
+            title: `Block ${blockMatch[1]}`,
+            moves: [],
+            forceAlt: /alternating/i.test(blockMatch[2] || ""),
+          };
+          continue;
+        }
+        const moveMatch = line.match(/^\d+[.)]\s*(.+)$/);
+        if (moveMatch) {
+          const parsed = parseMoveLine(moveMatch[1]);
+          parsed.forceAlt = current.forceAlt;
+          current.moves.push(parsed);
+        }
+      }
+      if (current.title || current.moves.length) blocks.push(current);
+      return blocks.filter((block) => block.moves.length);
+    }
+
+    function moveSource(row) {
+      return (
+        row["Detailed Moves"] ||
+        row["WIP-Moves"] ||
+        row["Workout Details"] ||
+        row["Stretches"] ||
+        ""
+      );
+    }
+
+    function moveList(row) {
+      const detailed = parseDetailedMoves(moveSource(row));
+      if (detailed.length) return detailed;
+      const names = []
+        .concat(row["Types of Moves"] || [])
+        .concat(row.Moves || [])
+        .concat(row["Floor Exercises"] || [])
+        .concat(row["Strength Exercises"] || [])
+        .concat(row["Conditioning Exercises"] || [])
+        .concat(row.Strikes || []);
+      const unique = [...new Set(names.filter(Boolean))];
+      if (!unique.length) return [];
+      return [{ title: null, moves: unique.map((name) => parseMoveLine(name)) }];
+    }
+
+    function formatWeightAmount(amount, unit) {
+      if (!amount) return "";
+      return unit === "kg" ? `${amount} kg` : `${amount} lb`;
+    }
+
+    function weightToken(weightClass, weights) {
+      if (!weightClass || weightClass === "bodyweight") return "";
+      const amount = formatWeightAmount(weights[weightClass], weights.unit);
+      if (amount) return `${amount} DBs`;
+      return `${weightClass} DBs`;
+    }
+
+    function workoutUsesDumbbells(row) {
+      const equipment = (row.Equipment || []).join(" ").toLowerCase();
+      if (equipment.includes("dumbbell")) return true;
+      return (row.Dumbbells || []).some((item) => !/bodyweight/i.test(item));
+    }
+
+    function workoutWeightClasses(row) {
+      const found = new Set();
+      for (const item of (row.Dumbbells || [])) {
+        const match = String(item).toLowerCase().match(/\b(light|medium|heavy)\b/);
+        if (match) found.add(match[1]);
+      }
+      return ["light", "medium", "heavy"].filter((key) => found.has(key));
+    }
+
+    function parseWeightPolicy(...texts) {
+      const blob = texts.filter(Boolean).join(" ").toLowerCase();
+      if (/first move\b/.test(blob) && /heavy/.test(blob) && /light/.test(blob) && /other|rest|remaining|all other/.test(blob)) {
+        return { firstInBlock: "heavy", rest: "light" };
+      }
+      return null;
+    }
+
+    function isBodyweightExercise(text) {
+      return /\b(push-?up|plank|mountain climber|burpee|jumping jack|high knee|hollow hold|dead bug|sit-?up|v-sit|bicycle|donkey kick|bird dog|walkout)\b/.test(text)
+        && !/\b(dumbbell|weighted|goblet|suitcase)\b/.test(text);
+    }
+
+    function isIsolationMove(text) {
+      return /\b(raise|curl|fly|kickback|tate press|tricep)\b/.test(text);
+    }
+
+    function looksWeighted(text, usesDumbbells) {
+      if (isBodyweightExercise(text)) return false;
+      if (/\b(dumbbell|db|goblet|suitcase|kettlebell)\b/.test(text)) return true;
+      if (!usesDumbbells) return false;
+      return /\b(row|press|raise|curl|squat|lunge|hinge|deadlift|thruster|fly|extension|good morning|bridge|chest press)\b/.test(text);
+    }
+
+    function resolveWeightClass(move, ctx) {
+      if (move.weightClass === "bodyweight") return null;
+      if (move.weightClass) return move.weightClass;
+      const text = moveText(move);
+      if (!looksWeighted(text, ctx.usesDumbbells)) return null;
+      if (ctx.policy) {
+        if (ctx.moveIndex === 0 && ctx.policy.firstInBlock) return ctx.policy.firstInBlock;
+        if (ctx.policy.rest) return ctx.policy.rest;
+      }
+      if (ctx.classes.length === 1) return ctx.classes[0];
+      if (isIsolationMove(text) && ctx.classes.includes("light")) return "light";
+      if (ctx.classes.includes("heavy") && !isIsolationMove(text)) return "heavy";
+      if (ctx.classes.includes("medium")) return "medium";
+      if (ctx.classes.includes("heavy")) return "heavy";
+      if (ctx.classes.includes("light")) return "light";
+      return null;
+    }
+
+    function moveText(move) {
+      return `${move.raw || ""} ${move.name || ""}`.toLowerCase();
+    }
+
+    function isLoadedMove(move) {
+      const text = moveText(move);
+      if (move.weightClass === "bodyweight") return false;
+      if (move.weightClass) return true;
+      return /\b(dumbbell|db|goblet|suitcase|kettlebell)\b/.test(text);
+    }
+
+    function classifyLaterality(move) {
+      const text = moveText(move);
+      const alternating = move.forceAlt || /\b(alternating|alt\.?|each (side|leg|arm)|per (side|leg|arm)|unilateral|single[- ](leg|arm)|one side at a time)\b/.test(text);
+      if (!alternating) return null;
+      if (/\b(lunge|split squat|step[- ]?up|kick|kickback|donkey|glute|leg)\b/.test(text)) return "leg";
+      if (/\b(press|row|curl|raise|fly|extension|overhead|arm|rotation)\b/.test(text)) return "arm";
+      return "side";
+    }
+
+    function libraryName(move) {
+      const text = moveText(move);
+      const loaded = isLoadedMove(move);
+      const alt = Boolean(classifyLaterality(move));
+      const suitcase = /\bsuitcase\b/.test(text);
+      const rotation = /\brotat/.test(text);
+      const wide = /\bwide\b/.test(text);
+      if (/\bthruster\b/.test(text) || /front squat to press/.test(text)) return "Dumbbell thruster";
+      if (/\bdonkey kick\b/.test(text)) {
+        return alt ? "Donkey kick (bodyweight, alternating legs)" : "Donkey kick (bodyweight)";
+      }
+      if (/\bbridge press\b/.test(text) || (/\bbridge\b/.test(text) && /\bpress\b/.test(text))) {
+        return "Bridge press (DB chest press + bridge)";
+      }
+      if (/\bfloor press\b/.test(text)) {
+        return rotation || alt
+          ? "Floor press with rotation (DB chest press, alternating)"
+          : "Dumbbell floor press";
+      }
+      if (/\breverse lunge\b/.test(text)) {
+        const extras = suitcase ? "suitcase" : "";
+        if (alt && loaded) return extras ? `Alternating reverse dumbbell lunge (${extras})` : "Alternating reverse dumbbell lunge";
+        if (loaded) return extras ? `Reverse dumbbell lunge (${extras})` : "Reverse dumbbell lunge";
+        return extras ? `Reverse lunge (${extras})` : "Reverse lunge";
+      }
+      if (/\b(forward lunge|lunge)\b/.test(text) && !/\b(lateral|diagonal|reverse)\b/.test(text)) {
+        const extras = [suitcase && "suitcase"].filter(Boolean).join(", ");
+        if (alt && loaded) return extras ? `Alternating dumbbell lunge (${extras})` : "Alternating dumbbell lunge";
+        if (loaded) return extras ? `Dumbbell lunge (${extras})` : "Dumbbell lunge";
+        return extras ? `Lunge (${extras})` : "Lunge";
+      }
+      if (/\bhinge to bent-over|bent-over wide row|wide row\b/.test(text) && /\brow\b/.test(text) && !rotation) {
+        return "Dumbbell bent-over row (wide)";
+      }
+      if (/\brow\b/.test(text) && rotation) {
+        return alt
+          ? "Single-arm dumbbell row with rotation (alternating)"
+          : "Dumbbell bent-over row with rotation";
+      }
+      if (/\b(overhead press|oh press)\b/.test(text)) {
+        if (rotation && alt) return "Dumbbell overhead press with slight rotation (alternating)";
+        if (rotation) return "Dumbbell overhead press with rotation";
+        return alt ? "Alternating dumbbell overhead press" : "Dumbbell overhead press";
+      }
+
+      const bases = [
+        [/good morning/, "Good morning"],
+        [/sumo.*squat|squat.*sumo/, "Sumo squat"],
+        [/narrow goblet squat/, "Narrow goblet squat"],
+        [/goblet squat/, "Goblet squat"],
+        [/suitcase squat/, "Dumbbell suitcase squat"],
+        [/squat/, "Squat"],
+        [/romanian deadlift|\brdl\b/, "Romanian deadlift"],
+        [/deadlift/, "Deadlift"],
+        [/kickstand hinge/, "Kickstand hinge"],
+        [/\bhinge\b/, "Hinge"],
+        [/bent-over row|bent over row/, "Bent-over row"],
+        [/\brow\b/, "Row"],
+        [/hammer curl/, "Hammer curl"],
+        [/zottman/, "Zottman curl"],
+        [/bicep/, "Biceps curl"],
+        [/lateral raise/, "Lateral raise"],
+        [/front raise/, "Front raise"],
+        [/push-?up/, "Push-up"],
+        [/glute bridge|weighted bridge|\bbridge\b/, "Glute bridge"],
+        [/lateral lunge|side lunge/, "Lateral lunge"],
+        [/diagonal lunge/, "Diagonal lunge"],
+        [/split squat/, "Split squat"],
+        [/chest press/, "Chest press"],
+        [/curl/, "Biceps curl"],
+        [/crunch/, "Crunch"],
+        [/plank/, "Plank"],
+        [/hollow/, "Hollow hold"],
+      ];
+      const found = bases.find(([re]) => re.test(text));
+      if (!found) {
+        return move.name.replace(/\s{2,}/g, " ").trim();
+      }
+      let name = found[1];
+      if (loaded && !/dumbbell|goblet/i.test(name) && !/push-up|plank|crunch|hollow/i.test(name)) {
+        name = `Dumbbell ${name[0].toLowerCase()}${name.slice(1)}`;
+      }
+      const extras = [
+        suitcase && !/suitcase/i.test(name) && "suitcase",
+        wide && "wide",
+        rotation && "rotation",
+        alt && !/^alternating/i.test(name) && "alternating",
+      ].filter(Boolean);
+      if (alt && !/^alternating/i.test(name) && !/push-up|plank|crunch/i.test(name)) {
+        name = `Alternating ${name[0].toLowerCase()}${name.slice(1)}`;
+      }
+      const leftover = extras.filter((extra) => extra !== "alternating" || !/^alternating/i.test(name));
+      return leftover.length ? `${name} (${leftover.join(", ")})` : name;
+    }
+
+    function clockToSeconds(clock) {
+      const match = String(clock).match(/^(\d+):(\d+)$/);
+      if (!match) return 45;
+      return Number(match[1]) * 60 + Number(match[2]);
+    }
+
+    function isTimedHold(text) {
+      if (/\bhollow(?:\s+body)?(?:\s+hold)?\b/.test(text) && !/\b(crunch|bicycle|dead bug)\b/.test(text)) return true;
+      if (/\b(dead hang|wall sit)\b/.test(text)) return true;
+      if (/\b(beast|superman)\b/.test(text) && /\bhold\b/.test(text) && !/\b(to |row|push)\b/.test(text)) return true;
+      if (/\bplank\b/.test(text)) {
+        return !/\b(row|walk-? ?out|jack|tap|push-?up|mountain climber|renegade|rotat\w*|saw|clamshell|high-to-low|low-to-high|low to high|high to low|inchworm)\b/.test(text);
+      }
+      return false;
+    }
+
+    function formatHoldTime(clock, text) {
+      const explicit = String(text || "").match(/(\d+)\s*(?:sec|seconds)\b/i);
+      if (explicit) return `${explicit[1]} sec`;
+      return `${clockToSeconds(clock)} sec`;
+    }
+
+    function estimateHold(move, clock) {
+      const text = moveText(move);
+      if (!isTimedHold(text)) return null;
+      return {
+        label: formatHoldTime(clock, text),
+        side: /\bside plank\b/.test(text) || classifyLaterality(move) ? "side" : null,
+      };
+    }
+
+    function estimateReps(move, clock) {
+      const text = moveText(move);
+      if (isTimedHold(text)) return null;
+      let per45 = 10;
+      if (/\b(donkey|kickback|clamshell|fire hydrant|glute kick)\b/.test(text)) per45 = 12;
+      else if (/\b(lunge|split squat|step[- ]?up)\b/.test(text)) per45 = 8;
+      else if (/\b(crunch|sit[- ]?up|mountain climber|bicycle)\b/.test(text)) per45 = 15;
+      else if (/\b(bridge|hip thrust)\b/.test(text) && !/\bpress\b/.test(text)) per45 = 12;
+      else if (/\b(thruster|squat|hinge|deadlift|row|press|push ?up)\b/.test(text)) per45 = 10;
+      return {
+        count: Math.max(4, Math.round(per45 * (clockToSeconds(clock) / 45))),
+        side: classifyLaterality(move),
+      };
+    }
+
+    function estimateSlotTime(minutes, slotCount) {
+      if (!slotCount) return "0:45";
+      return formatClock((minutes * 60 * 0.65) / slotCount);
+    }
+
+    function formatWhoopWorkout(parsed, apple, row, weights) {
+      const title = row.Name || apple?.name || parsed.slug;
+      const duration = row.Duration || apple?.durationLabel || "";
+      const focus = row["Body Focus"] || apple?.bodyFocus || "";
+      const format = parseFormat(row.Format || row["Format Details"]);
+      const blocks = moveList(row);
+      const rounds = format.rounds || parseRoundsFromText(row.Format, apple?.description, row["Format Details"], moveSource(row)) || (format.once ? 1 : null);
+      const weightCtx = {
+        classes: workoutWeightClasses(row),
+        usesDumbbells: workoutUsesDumbbells(row),
+        policy: parseWeightPolicy(moveSource(row), apple?.description),
+      };
+      const minutes = parseMinutes(row.Duration, apple?.durationMs);
+      const slotCount = blocks.reduce((sum, block) => {
+        const blockRounds = rounds && !format.irregular ? rounds : 1;
+        return sum + block.moves.length * blockRounds;
+      }, 0);
+      const perMove = estimateSlotTime(minutes, slotCount || blocks.reduce((sum, block) => sum + block.moves.length, 0));
+      const headerBits = [duration, focus].filter(Boolean);
+      const lines = [`${title}${headerBits.length ? ` (${headerBits.join(", ")})` : ""}`];
+      if (format.text) lines.push(format.text);
+
+      if (apple?.description && !parseDetailedMoves(moveSource(row)).length) {
+        lines.push("", apple.description);
+      }
+
+      if (!blocks.length) {
+        if (!apple?.description) lines.push("", "No move list was available for this workout.");
+        return lines.join("\n").trim();
+      }
+
+      const useRounds = rounds && rounds > 1 && !format.irregular;
+      blocks.forEach((block, index) => {
+        lines.push("");
+        const heading = block.title
+          || (blocks.length > 1 ? `Section ${index + 1}` : (parsed.table === "Core" ? "Core" : "Main Strength"));
+        const sets = useRounds ? rounds : (format.sets || 1);
+        if (useRounds) lines.push(`${heading} — ${rounds} rounds`);
+        else if (format.sets) lines.push(`${heading} — ${format.sets} sets`);
+        else lines.push(heading);
+        block.moves.forEach((move, moveIndex) => {
+          const tagged = {
+            ...move,
+            weightClass: resolveWeightClass(move, { ...weightCtx, moveIndex }) || move.weightClass,
+          };
+          const hold = estimateHold(tagged, perMove);
+          const load = hold ? "" : weightToken(tagged.weightClass, weights);
+          const reps = hold ? null : estimateReps(tagged, perMove);
+          const dose = hold
+            ? `${sets}×${hold.label}${hold.side ? `/${hold.side}` : ""}`
+            : reps
+              ? `${sets}×${reps.count} reps${reps.side ? `/${reps.side}` : ""}`
+              : `${sets} sets`;
+          lines.push(`${moveIndex + 1}) ${libraryName(tagged)} — ${dose}${load ? ` @ ${load}` : ""}`);
+        });
+      });
+
+      return lines.join("\n").trim();
+    }
+
+    async function findRows(parsed, apple) {
+      if (!parsed.table) return [];
+      await loadTable(parsed.table);
+      const local = findInCatalog(parsed, apple);
+      if (local.length) return local;
+      const table = parsed.table;
+      const col = trainerColumn(table);
+      if (parsed.id) {
+        const byLink = await seatableSql(
+          `SELECT * FROM \`${escapeSql(table)}\` WHERE \`Link\` LIKE '%${escapeSql(parsed.id)}%'`
+        );
+        if (byLink.length) return byLink;
+      }
+      if (!parsed.trainer && !apple?.trainer) {
+        return seatableSql(
+          `SELECT * FROM \`${escapeSql(table)}\` ORDER BY \`Date\` DESC LIMIT 12`
+        );
+      }
+      const trainer = escapeSql(parsed.trainer || apple.trainer);
+      if (apple?.releaseDate) {
+        const day = apple.releaseDate;
+        const next = new Date(`${day}T00:00:00Z`);
+        next.setUTCDate(next.getUTCDate() + 2);
+        const nextDay = next.toISOString().slice(0, 10);
+        const onDate = await seatableSql(
+          `SELECT * FROM \`${escapeSql(table)}\` WHERE \`${col}\` = '${trainer}' AND \`Date\` >= '${day}' AND \`Date\` < '${nextDay}'`
+        );
+        if (onDate.length === 1) return onDate;
+        if (onDate.length > 1) {
+          const sameDuration = onDate.filter((row) => row.Duration === apple.durationLabel);
+          return sameDuration.length ? sameDuration : onDate;
+        }
+      }
+      const candidates = await seatableSql(
+        `SELECT * FROM \`${escapeSql(table)}\` WHERE \`${col}\` = '${trainer}' ORDER BY \`Date\` DESC LIMIT 40`
+      );
+      if (!apple) return candidates;
+      const scored = candidates.map((row) => {
+        let score = 0;
+        if (apple.releaseDate && dateOnly(row.Date) === apple.releaseDate) score += 8;
+        if (apple.durationLabel && row.Duration === apple.durationLabel) score += 4;
+        if (apple.music && row.Music === apple.music) score += 3;
+        if (apple.episodeNumber != null && Number(row.Ep) === Number(apple.episodeNumber)) score += 2;
+        if (apple.releaseDate) {
+          const diff = Math.abs(new Date(dateOnly(row.Date)) - new Date(apple.releaseDate));
+          if (diff <= 7 * 86400000) score += 1;
+        }
+        return { row, score };
+      });
+      scored.sort((a, b) => b.score - a.score || String(b.row.Date).localeCompare(String(a.row.Date)));
+      const confident = scored.filter((item) => item.score >= 7);
+      if (confident.length === 1) return [confident[0].row];
+      if (confident.length > 1) {
+        const tighter = confident.filter((item) => item.score >= 12);
+        return (tighter.length ? tighter : confident).map((item) => item.row);
+      }
+      return scored.slice(0, 15).map((item) => item.row);
+    }
+
+    function renderStatuses() {
+      if (!sessionState.length) {
+        els.statuses.innerHTML = `<div class="status"><span class="pill">Ready</span><div class="meta">Paste a link and generate.</div></div>`;
+        return;
+      }
+      els.statuses.innerHTML = sessionState.map((item, index) => {
+        const options = (item.choices || []).map((row, choiceIndex) => {
+          const selected = item.row && item.row._id === row._id ? " selected" : "";
+          return `<option value="${choiceIndex}"${selected}>${row.Name || "Untitled"} • ${dateOnly(row.Date)} • ${row.Duration || "?"}</option>`;
+        }).join("");
+        const picker = item.choices && item.choices.length
+          ? `<div style="margin-top:8px"><select data-index="${index}">${item.choices.length > 1 ? `<option value="">Choose the matching episode</option>` : ""}${options}</select></div>`
+          : "";
+        return `
+          <div class="status ${item.level}">
+            <span class="pill">${item.pill}</span>
+            <h3>${item.title}</h3>
+            <div class="meta">${item.meta}</div>
+            ${picker}
+          </div>`;
+      }).join("");
+
+      els.statuses.querySelectorAll("select").forEach((select) => {
+        select.addEventListener("change", () => {
+          const item = sessionState[Number(select.dataset.index)];
+          const choice = item.choices[Number(select.value)];
+          if (!choice) return;
+          item.row = choice;
+          item.level = "ok";
+          item.pill = "Matched";
+          item.title = choice.Name || item.parsed.slug;
+          item.meta = `${dateOnly(choice.Date)} • ${choice.Duration || ""} • ${choice.Format || choice.Music || ""}`.replace(/ • $/, "");
+          rememberDiscovery(item.parsed, item.apple, item.row);
+          rebuildOutput();
+          renderStatuses();
+        });
+      });
+    }
+
+    function rebuildOutput() {
+      const item = sessionState[0];
+      els.output.value = item?.row
+        ? formatWhoopWorkout(item.parsed, item.apple, item.row, currentWeights())
+        : "";
+    }
+
+    function firstUrl(value) {
+      const match = String(value).match(/https?:\/\/\S+/i);
+      return match ? match[0].replace(/[.,);]+$/, "") : String(value).trim();
+    }
+
+    async function generate() {
+      const line = firstUrl(els.link.value);
+      els.link.value = line;
+      if (!line) {
+        sessionState.length = 0;
+        els.output.value = "";
+        renderStatuses();
+        return;
+      }
+      els.generate.disabled = true;
+      const item = {
+        parsed: null,
+        apple: null,
+        row: null,
+        choices: [],
+        level: "warn",
+        pill: "Working",
+        title: line,
+        meta: "Looking up workout…",
+      };
+      sessionState.length = 0;
+      sessionState.push(item);
+      renderStatuses();
+      try {
+        item.parsed = parseWorkoutUrl(line);
+        try {
+          item.apple = parseApplePage(await fetchViaProxy(line));
+          if (!item.parsed.trainer && item.apple.trainer) item.parsed.trainer = item.apple.trainer;
+        } catch (error) {
+          item.meta = `Could not read the Apple page (${error.message}). Showing recent ${item.parsed.table || "workouts"} instead.`;
+        }
+        if (!item.parsed.table) throw new Error("Could not tell which Fitness+ workout type that link is.");
+        const rows = await findRows(item.parsed, item.apple);
+        item.choices = rows;
+        if (!rows.length) throw new Error(`No ${item.parsed.table} rows found for ${item.parsed.trainer || "that trainer"}.`);
+        if (rows.length === 1 || (item.apple && rows.length > 0 && dateOnly(rows[0].Date) === item.apple.releaseDate && rows[0].Duration === item.apple.durationLabel)) {
+          item.row = rows[0];
+          item.level = "ok";
+          item.pill = "Matched";
+          item.title = rows[0].Name || item.parsed.slug;
+          item.meta = `${dateOnly(rows[0].Date)} • ${rows[0].Duration || ""} • ${rows[0].Format || rows[0].Music || item.apple?.description || ""}`.replace(/ • $/, "");
+          rememberDiscovery(item.parsed, item.apple, item.row);
+        } else {
+          item.level = "warn";
+          item.pill = "Pick episode";
+          item.title = `${item.parsed.table}${item.parsed.trainer ? ` with ${item.parsed.trainer}` : ""}`;
+          item.meta = item.apple
+            ? `Apple date ${item.apple.releaseDate}, ${item.apple.durationLabel}. Choose the SeaTable row if the automatic match is unclear.`
+            : `Choose the episode you did.`;
+        }
+      } catch (error) {
+        item.level = "error";
+        item.pill = "Error";
+        item.meta = error.message;
+      }
+      rebuildOutput();
+      renderStatuses();
+      els.generate.disabled = false;
+    }
+
+    els.lbs.addEventListener("click", () => {
+      unit = "lbs";
+      els.lbs.classList.add("active");
+      els.kg.classList.remove("active");
+      saveWeights();
+      rebuildOutput();
+    });
+    els.kg.addEventListener("click", () => {
+      unit = "kg";
+      els.kg.classList.add("active");
+      els.lbs.classList.remove("active");
+      saveWeights();
+      rebuildOutput();
+    });
+    ["light", "medium", "heavy"].forEach((key) => {
+      els[key].addEventListener("input", () => {
+        saveWeights();
+        rebuildOutput();
+      });
+    });
+    els.link.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        generate();
+      }
+    });
+    els.generate.addEventListener("click", generate);
+    els.clear.addEventListener("click", () => {
+      els.link.value = "";
+      els.output.value = "";
+      sessionState.length = 0;
+      renderStatuses();
+    });
+    els.copy.addEventListener("click", async () => {
+      const text = els.output.value.trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        els.output.select();
+        document.execCommand("copy");
+      }
+      els.toast.style.display = "block";
+      setTimeout(() => { els.toast.style.display = "none"; }, 1400);
+    });
+
+    loadWeights();
+  </script>
+</body>
+</html>

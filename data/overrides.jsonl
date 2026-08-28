@@ -1,0 +1,4 @@
+# One JSON object per line. Merged into the catalog on refresh.
+# Match an existing row with table + appleId, _id, Trainer+Ep, or Trainer+Date(+Duration).
+# Unmatched objects are appended as extra rows.
+# {"table":"Strength","Trainer":"Gregg","Ep":145,"appleId":"1773439426"}
