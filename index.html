@@ -370,7 +370,7 @@
         <button class="ghost" id="copy" type="button">Copy</button>
       </div>
       <textarea id="output" placeholder="Generated workout text will appear here. You can edit it before copying."></textarea>
-      <p class="hint">Sets, reps, and hold times are estimates from the class format. Edit them if your pace was different.</p>
+      <p class="hint">Sets, reps, and hold times are estimates from each move’s interval (or 45 seconds if none is listed). Edit them if your pace was different.</p>
     </section>
     <footer>
       Unofficial and not affiliated with Apple or Whoop.
@@ -478,18 +478,45 @@
       return `${best} min`;
     }
 
-    function parseMinutes(label, fallbackMs) {
-      const match = String(label || "").match(/(\d+)/);
-      if (match) return Number(match[1]);
-      if (fallbackMs) return Math.round(Number(fallbackMs) / 60000);
-      return 20;
+    function listedWorkSeconds(text) {
+      const raw = String(text || "");
+      return [...raw.matchAll(/(\d+)\s*(?:sec|seconds)\b/gi)]
+        .filter((match) => !/every\s+$/i.test(raw.slice(Math.max(0, match.index - 8), match.index)))
+        .map((match) => Number(match[1]))
+        .filter((value) => value > 0 && value <= 180);
     }
 
-    function formatClock(seconds) {
-      const rounded = Math.max(15, Math.round(seconds / 15) * 15);
-      const mins = Math.floor(rounded / 60);
-      const secs = rounded % 60;
-      return `${mins}:${String(secs).padStart(2, "0")}`;
+    function parseEachSeconds(text) {
+      const match = String(text || "").match(/(\d+)\s*(?:sec|seconds)\s+each\b/i);
+      return match ? Number(match[1]) : null;
+    }
+
+    function parseWorkoutIntervalSeconds(...texts) {
+      const blob = texts.filter(Boolean).join("\n");
+      const each = parseEachSeconds(blob);
+      if (each) return each;
+      const interval = blob.match(/(\d+)\s*-?\s*(?:sec|second)s?\s+intervals?\b/i)
+        || blob.match(/intervals?\s+(?:that\s+)?(?:last|are|of|lasts?)\s+(\d+)/i);
+      if (interval) return Number(interval[1]);
+      const range = blob.match(/(\d+(?:\s*[-–]\s*\d+)+)\s*(?:sec|seconds)\b/i);
+      if (range) {
+        const parts = range[1].split(/\s*[-–]\s*/).map(Number).filter((value) => value > 0 && value <= 180);
+        if (parts.length) return Math.round(parts.reduce((sum, value) => sum + value, 0) / parts.length);
+      }
+      const lasts = blob.match(/lasts?\s+(\d+)\s*(?:sec|seconds)\b/i);
+      if (lasts) return Number(lasts[1]);
+      return 45;
+    }
+
+    function moveIntervalSeconds(move, fallback) {
+      const text = `${move.raw || ""} ${move.name || ""}`;
+      const each = parseEachSeconds(text);
+      if (each) return each;
+      const times = listedWorkSeconds(text);
+      if (times.length === 1) return times[0];
+      if (times.length > 1) return times.reduce((sum, value) => sum + value, 0);
+      if (move.intervalSeconds) return move.intervalSeconds;
+      return fallback;
     }
 
     function loadWeights() {
@@ -1114,15 +1141,27 @@
       const looksLikeMoves = lines.some((line) => /^\d+[.)]/.test(line));
       if (!looksLikeMoves) return [];
       const blocks = [];
-      let current = { title: null, moves: [], forceAlt: false };
+      let current = { title: null, moves: [], forceAlt: false, intervalSeconds: null };
       for (const line of lines) {
-        const blockMatch = line.match(/^block\s+(\d+)\b(.*)$/i);
+        const blockMatch = line.match(/^_*block\s+(\d+)\b(.*)$/i);
         if (blockMatch) {
           if (current.title || current.moves.length) blocks.push(current);
           current = {
             title: `Block ${blockMatch[1]}`,
             moves: [],
             forceAlt: /alternating/i.test(blockMatch[2] || ""),
+            intervalSeconds: parseEachSeconds(line),
+          };
+          continue;
+        }
+        const each = parseEachSeconds(line);
+        if (each && !/^\d+[.)]/.test(line)) {
+          if (current.moves.length) blocks.push(current);
+          current = {
+            title: line.replace(/^_+|_+$/g, "").trim(),
+            moves: [],
+            forceAlt: /alternating/i.test(line),
+            intervalSeconds: each,
           };
           continue;
         }
@@ -1130,6 +1169,7 @@
         if (moveMatch) {
           const parsed = parseMoveLine(moveMatch[1]);
           parsed.forceAlt = current.forceAlt;
+          parsed.intervalSeconds = current.intervalSeconds;
           current.moves.push(parsed);
         }
       }
@@ -1318,12 +1358,6 @@
       return closestWhoopName(norm || text) || "Other (generic reps-based core movement – last resort)";
     }
 
-    function clockToSeconds(clock) {
-      const match = String(clock).match(/^(\d+):(\d+)$/);
-      if (!match) return 45;
-      return Number(match[1]) * 60 + Number(match[2]);
-    }
-
     function isTimedHold(text) {
       if (/\bhollow(?:\s+body)?(?:\s+hold)?\b/.test(text) && !/\b(crunch|bicycle|dead bug)\b/.test(text)) return true;
       if (/\b(dead hang|wall sit)\b/.test(text)) return true;
@@ -1334,22 +1368,22 @@
       return false;
     }
 
-    function formatHoldTime(clock, text) {
+    function formatHoldTime(seconds, text) {
       const explicit = String(text || "").match(/(\d+)\s*(?:sec|seconds)\b/i);
       if (explicit) return `${explicit[1]} sec`;
-      return `${clockToSeconds(clock)} sec`;
+      return `${seconds} sec`;
     }
 
-    function estimateHold(move, clock) {
+    function estimateHold(move, seconds) {
       const text = moveText(move);
       if (!isTimedHold(text)) return null;
       return {
-        label: formatHoldTime(clock, text),
+        label: formatHoldTime(seconds, text),
         side: /\bside plank\b/.test(text) || classifyLaterality(move) ? "side" : null,
       };
     }
 
-    function estimateReps(move, clock) {
+    function estimateReps(move, seconds) {
       const text = moveText(move);
       if (isTimedHold(text)) return null;
       let per45 = 10;
@@ -1359,14 +1393,9 @@
       else if (/\b(bridge|hip thrust)\b/.test(text) && !/\bpress\b/.test(text)) per45 = 12;
       else if (/\b(thruster|squat|hinge|deadlift|row|press|push ?up)\b/.test(text)) per45 = 10;
       return {
-        count: Math.max(4, Math.round(per45 * (clockToSeconds(clock) / 45))),
+        count: Math.max(4, Math.round(per45 * (seconds / 45))),
         side: classifyLaterality(move),
       };
-    }
-
-    function estimateSlotTime(minutes, slotCount) {
-      if (!slotCount) return "0:45";
-      return formatClock((minutes * 60 * 0.65) / slotCount);
     }
 
     function formatWhoopWorkout(parsed, apple, row, weights) {
@@ -1381,12 +1410,12 @@
         usesDumbbells: workoutUsesDumbbells(row),
         policy: parseWeightPolicy(moveSource(row), apple?.description),
       };
-      const minutes = parseMinutes(row.Duration, apple?.durationMs);
-      const slotCount = blocks.reduce((sum, block) => {
-        const blockRounds = rounds && !format.irregular ? rounds : 1;
-        return sum + block.moves.length * blockRounds;
-      }, 0);
-      const perMove = estimateSlotTime(minutes, slotCount || blocks.reduce((sum, block) => sum + block.moves.length, 0));
+      const workoutSeconds = parseWorkoutIntervalSeconds(
+        format.text,
+        row.Format,
+        row["Format Details"],
+        apple?.description
+      );
       const headerBits = [duration, focus].filter(Boolean);
       const lines = [`${title}${headerBits.length ? ` (${headerBits.join(", ")})` : ""}`];
       if (format.text) lines.push(format.text);
@@ -1414,9 +1443,10 @@
             ...move,
             weightClass: resolveWeightClass(move, { ...weightCtx, moveIndex }) || move.weightClass,
           };
-          const hold = estimateHold(tagged, perMove);
+          const seconds = moveIntervalSeconds(tagged, workoutSeconds);
+          const hold = estimateHold(tagged, seconds);
           const load = hold ? "" : weightToken(tagged.weightClass, weights);
-          const reps = hold ? null : estimateReps(tagged, perMove);
+          const reps = hold ? null : estimateReps(tagged, seconds);
           const dose = hold
             ? `${sets}×${hold.label}${hold.side ? `/${hold.side}` : ""}`
             : reps
