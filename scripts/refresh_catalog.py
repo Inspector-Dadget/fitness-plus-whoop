@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -53,6 +52,7 @@ OUT_OVERRIDES = DATA_DIR / "overrides.jsonl"
 OUT_DISCOVERED = DATA_DIR / "discovered-urls.jsonl"
 OUT_MISSING = DATA_DIR / "missing.jsonl"
 MISSING_FIELDS = ("table", "_id", "Name", "Trainer", "Date", "Duration", "Ep", "Music", "Body Focus")
+HTTP_TIMEOUT = 30
 
 
 def table_slug(table: str) -> str:
@@ -65,7 +65,8 @@ def table_path(table: str) -> Path:
 
 def seatable_auth() -> tuple[str, str]:
     html = urllib.request.urlopen(
-        f"https://cloud.seatable.io/dtable/external-links/{SEATABLE_LINK}/"
+        f"https://cloud.seatable.io/dtable/external-links/{SEATABLE_LINK}/",
+        timeout=HTTP_TIMEOUT,
     ).read().decode()
     token = re.search(r"accessToken:\s*'([^']+)'", html)
     uuid = re.search(r"dtableUuid:\s*'([^']+)'", html)
@@ -81,7 +82,7 @@ def seatable_sql(token: str, uuid: str, sql: str) -> list[dict]:
         data=body,
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
     )
-    data = json.load(urllib.request.urlopen(req))
+    data = json.load(urllib.request.urlopen(req, timeout=HTTP_TIMEOUT))
     if not data.get("success"):
         raise RuntimeError(data.get("error_message") or "SeaTable query error")
     return data.get("results") or []
@@ -455,11 +456,11 @@ def main() -> None:
     tables: dict[str, list[dict]] = {}
     for table in TABLES:
         print(f"Fetching {table}...")
-        try:
-            tables[table] = fetch_table(token, uuid, table)
-            print(f"  {len(tables[table])} rows")
-        except urllib.error.HTTPError as error:
-            print(f"  skipped ({error.code})")
+        rows = fetch_table(token, uuid, table)
+        if not rows:
+            raise RuntimeError(f"SeaTable returned no rows for {table}")
+        tables[table] = rows
+        print(f"  {len(rows)} rows")
     override_stats = apply_overrides(tables)
     print(f"Overrides: updated {override_stats['updated']}, added {override_stats['added']}")
     discovered_stats = apply_discovered(tables)
