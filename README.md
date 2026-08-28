@@ -36,8 +36,7 @@ There is no public Fitness+ search or catalog API. iTunes lookup does not index 
 
 What we can add:
 
-1. Put the Fitness+ URL back into SeaTable if you can edit that base. Refresh will pick up the ID.
-2. Add a line to `data/overrides.jsonl` to attach an ID, fill a blank field, or insert a workout SeaTable never had:
+1. Add a line to `data/overrides.jsonl` to attach an ID, fill a blank field, or insert a workout SeaTable never had:
 
 ```json
 {"table":"Strength","Trainer":"Gregg","Ep":145,"appleId":"1773439426"}
@@ -46,7 +45,7 @@ What we can add:
 
 Unmatched override objects are appended as extra rows.
 
-3. After you generate from a link, this browser remembers the Apple ID in `localStorage` and reuses it on the next match.
+2. After you generate from a link, this browser remembers the Apple ID in `localStorage` and reuses it on the next match.
 
 A GitHub Action runs that script every Monday and on demand, then commits catalog changes.
 
@@ -64,6 +63,8 @@ The page uses the snapshot first and only talks to SeaTable live if the catalog 
 4. If more than one row looks plausible, you pick the episode.
 
 Strength rows have the richest move scripts. Core, HIIT, and other types fall back to move lists when a full script is missing. When a script has no light/medium/heavy tags, the page infers Light vs Heavy from the movement type.
+
+Move names are mapped to the Whoop Strength Trainer library in [`data/whoop-exercises.json`](data/whoop-exercises.json). `rules` is each SeaTable phrase → one Whoop name from `names`. Empty values are seen but not assigned yet. Rebuild with `python3 scripts/build_whoop_rules.py`.
 
 ## Hosting
 

@@ -443,6 +443,8 @@
     const catalogTables = {};
     const sessionState = [];
     const pick = { table: "", trainer: "", duration: "", ep: "", rowId: "" };
+    let whoopLibrary = { names: new Set(), rules: {} };
+    let whoopLibraryPromise = null;
 
     function titleCaseName(value) {
       return String(value || "")
@@ -765,7 +767,8 @@
       };
     }
 
-    function applyPickedRow(row) {
+    async function applyPickedRow(row) {
+      await loadWhoopLibrary();
       pick.rowId = row._id;
       if (row.Duration) pick.duration = row.Duration;
       if (row.Ep != null && row.Ep !== "") {
@@ -1247,99 +1250,71 @@
       return "side";
     }
 
-    function libraryName(move) {
-      const text = moveText(move);
-      const loaded = isLoadedMove(move);
-      const alt = Boolean(classifyLaterality(move));
-      const suitcase = /\bsuitcase\b/.test(text);
-      const rotation = /\brotat/.test(text);
-      const wide = /\bwide\b/.test(text);
-      if (/\bthruster\b/.test(text) || /front squat to press/.test(text)) return "Dumbbell thruster";
-      if (/\bdonkey kick\b/.test(text)) {
-        return alt ? "Donkey kick (bodyweight, alternating legs)" : "Donkey kick (bodyweight)";
-      }
-      if (/\bbridge press\b/.test(text) || (/\bbridge\b/.test(text) && /\bpress\b/.test(text))) {
-        return "Bridge press (DB chest press + bridge)";
-      }
-      if (/\bfloor press\b/.test(text)) {
-        return rotation || alt
-          ? "Floor press with rotation (DB chest press, alternating)"
-          : "Dumbbell floor press";
-      }
-      if (/\breverse lunge\b/.test(text)) {
-        const extras = suitcase ? "suitcase" : "";
-        if (alt && loaded) return extras ? `Alternating reverse dumbbell lunge (${extras})` : "Alternating reverse dumbbell lunge";
-        if (loaded) return extras ? `Reverse dumbbell lunge (${extras})` : "Reverse dumbbell lunge";
-        return extras ? `Reverse lunge (${extras})` : "Reverse lunge";
-      }
-      if (/\b(forward lunge|lunge)\b/.test(text) && !/\b(lateral|diagonal|reverse)\b/.test(text)) {
-        const extras = [suitcase && "suitcase"].filter(Boolean).join(", ");
-        if (alt && loaded) return extras ? `Alternating dumbbell lunge (${extras})` : "Alternating dumbbell lunge";
-        if (loaded) return extras ? `Dumbbell lunge (${extras})` : "Dumbbell lunge";
-        return extras ? `Lunge (${extras})` : "Lunge";
-      }
-      if (/\bhinge to bent-over|bent-over wide row|wide row\b/.test(text) && /\brow\b/.test(text) && !rotation) {
-        return "Dumbbell bent-over row (wide)";
-      }
-      if (/\brow\b/.test(text) && rotation) {
-        return alt
-          ? "Single-arm dumbbell row with rotation (alternating)"
-          : "Dumbbell bent-over row with rotation";
-      }
-      if (/\b(overhead press|oh press)\b/.test(text)) {
-        if (rotation && alt) return "Dumbbell overhead press with slight rotation (alternating)";
-        if (rotation) return "Dumbbell overhead press with rotation";
-        return alt ? "Alternating dumbbell overhead press" : "Dumbbell overhead press";
-      }
+    function normalizeMove(raw) {
+      let text = String(raw || "").toLowerCase();
+      text = text.replace(/\([^)]*\)/g, " ");
+      text = text.replace(/,?\s*\b(light|medium|heavy|bodyweight)\b/gi, " ");
+      text = text.split(/\s+(?:with|starting|then)\s+/)[0];
+      text = text.replace(/[^a-z0-9/+\- ]+/g, " ");
+      return text.replace(/\s+/g, " ").trim().replace(/^-+|-+$/g, "");
+    }
 
-      const bases = [
-        [/good morning/, "Good morning"],
-        [/sumo.*squat|squat.*sumo/, "Sumo squat"],
-        [/narrow goblet squat/, "Narrow goblet squat"],
-        [/goblet squat/, "Goblet squat"],
-        [/suitcase squat/, "Dumbbell suitcase squat"],
-        [/squat/, "Squat"],
-        [/romanian deadlift|\brdl\b/, "Romanian deadlift"],
-        [/deadlift/, "Deadlift"],
-        [/kickstand hinge/, "Kickstand hinge"],
-        [/\bhinge\b/, "Hinge"],
-        [/bent-over row|bent over row/, "Bent-over row"],
-        [/\brow\b/, "Row"],
-        [/hammer curl/, "Hammer curl"],
-        [/zottman/, "Zottman curl"],
-        [/bicep/, "Biceps curl"],
-        [/lateral raise/, "Lateral raise"],
-        [/front raise/, "Front raise"],
-        [/push-?up/, "Push-up"],
-        [/glute bridge|weighted bridge|\bbridge\b/, "Glute bridge"],
-        [/lateral lunge|side lunge/, "Lateral lunge"],
-        [/diagonal lunge/, "Diagonal lunge"],
-        [/split squat/, "Split squat"],
-        [/chest press/, "Chest press"],
-        [/curl/, "Biceps curl"],
-        [/crunch/, "Crunch"],
-        [/plank/, "Plank"],
-        [/hollow/, "Hollow hold"],
-      ];
-      const found = bases.find(([re]) => re.test(text));
-      if (!found) {
-        return move.name.replace(/\s{2,}/g, " ").trim();
+    function loadWhoopLibrary() {
+      if (whoopLibraryPromise) return whoopLibraryPromise;
+      whoopLibraryPromise = fetch("data/whoop-exercises.json", { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error("Could not load Whoop exercise library");
+          return response.text();
+        })
+        .then((text) => {
+          const data = JSON.parse(text);
+          const rules = {};
+          for (const [phrase, name] of Object.entries(data.rules || {})) {
+            if (Array.isArray(name)) continue;
+            const key = normalizeMove(phrase);
+            if (key && name && !rules[key]) rules[key] = name;
+          }
+          whoopLibrary = {
+            names: new Set(data.names || []),
+            rules,
+          };
+        })
+        .catch(() => {
+          whoopLibraryPromise = null;
+        });
+      return whoopLibraryPromise;
+    }
+
+    function closestWhoopName(text) {
+      const stop = new Set(["with", "and", "the", "from", "then", "into", "your", "for", "each", "side", "arm", "leg"]);
+      const tokens = String(text || "").toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2 && !stop.has(token));
+      if (!tokens.length) return "";
+      let best = "";
+      let bestScore = 0;
+      for (const name of whoopLibrary.names) {
+        const parts = name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+        const score = tokens.filter((token) => parts.some((part) => part === token || part.includes(token) || token.includes(part))).length;
+        if (score > bestScore) {
+          bestScore = score;
+          best = name;
+        }
       }
-      let name = found[1];
-      if (loaded && !/dumbbell|goblet/i.test(name) && !/push-up|plank|crunch|hollow/i.test(name)) {
-        name = `Dumbbell ${name[0].toLowerCase()}${name.slice(1)}`;
-      }
-      const extras = [
-        suitcase && !/suitcase/i.test(name) && "suitcase",
-        wide && "wide",
-        rotation && "rotation",
-        alt && !/^alternating/i.test(name) && "alternating",
-      ].filter(Boolean);
-      if (alt && !/^alternating/i.test(name) && !/push-up|plank|crunch/i.test(name)) {
-        name = `Alternating ${name[0].toLowerCase()}${name.slice(1)}`;
-      }
-      const leftover = extras.filter((extra) => extra !== "alternating" || !/^alternating/i.test(name));
-      return leftover.length ? `${name} (${leftover.join(", ")})` : name;
+      return bestScore >= 2 ? best : "";
+    }
+
+    function whoopNameForLoad(name, loaded) {
+      if (loaded) return name;
+      const bodyweight = name.replace(/ - Dumbbell$/, " - Bodyweight");
+      return bodyweight !== name && whoopLibrary.names.has(bodyweight) ? bodyweight : name;
+    }
+
+    function libraryName(move) {
+      const text = move.name || move.raw || "";
+      const norm = normalizeMove(text);
+      const loaded = isLoadedMove(move);
+      const mapped = whoopLibrary.rules[norm];
+      if (mapped) return whoopNameForLoad(mapped, loaded);
+      return closestWhoopName(norm || text) || "Other (generic reps-based core movement – last resort)";
     }
 
     function clockToSeconds(clock) {
@@ -1571,6 +1546,7 @@
     }
 
     async function generate() {
+      await loadWhoopLibrary();
       if (sourceMode === "catalog") {
         const row = selectedCatalogRow();
         if (row) {
@@ -1717,6 +1693,7 @@
     loadWeights();
     loadSourceMode();
     renderPicker();
+    loadWhoopLibrary();
   </script>
 </body>
 </html>
