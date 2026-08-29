@@ -23,8 +23,46 @@ LIST_FIELDS = (
     "Strikes",
 )
 TEXT_FIELDS = ("Detailed Moves", "WIP-Moves", "Workout Details", "Stretches")
+OTHER = "Other (generic reps-based core movement – last resort)"
+
+# Skip inherit on words that appear in too many different Whoop names.
+INHERIT_STOP = {
+    "and", "the", "with", "from", "then", "into", "your", "for", "each", "side",
+    "arm", "leg", "to", "in", "a", "on", "or", "of", "at", "up", "down", "back",
+    "out", "one", "two", "both", "single", "double", "alternating", "reset",
+    "combo", "hold", "move", "bodyweight", "dumbbell", "db", "raise", "press",
+    "jump", "chop", "clean", "kick", "walk", "stretch", "row", "squat", "lunge",
+    "fly", "curl", "pull", "tap", "step", "knee", "hip", "high", "low", "wide",
+    "narrow", "front", "rear", "bent", "over", "stand", "standing", "kneeling",
+}
 
 MATCHERS = [
+    (r"^rowing$", "Rowing"),
+    (r"^running$", "Running"),
+    (r"waiter'? ?s carry", "KB Waiter Carry"),
+    (r"^suitcase$|suitcase (?:carry|march|walk|hold)", "Farmer's Walk - Dumbbell"),
+    (r"strider", "Lunge - Alternating - Dumbbell"),
+    (r"^curtsy$", "DB Curtsy Lunge"),
+    (r"reverse lu[gn]e|reverse lugne", "Backward Lunge - Alternating - Dumbbell"),
+    (r"concentrat(?:ed|ion) curls?", "Concentration Curl - L - Dumbbell"),
+    (r"high pull|upright row", "Upright Row - Barbell"),
+    (r"face[- ]?pull", "Straight Arm Pull Down"),
+    (r"rear delt", "Bench Fly - Dumbbell"),
+    (r"powell raise", "Bench Fly - Dumbbell"),
+    (r"poliquin raise|circular raise|iyt raise|i-y-t|i y t|banded i t y", "DB Bench Y Raise"),
+    (r"hang clean|power clean|\bsnatch\b|clean to press|^clean$", "DB Single Arm Clean and Jerk"),
+    (r"wood ?chop|crossbody chop|rotational chop|\bchops?\b", "Standing Landmine Rotations"),
+    (r"hip abduction", "Glute Abductor Machine"),
+    (r"hip adduction", "Groin Adductor Machine"),
+    (r"half get[- ]?up|quarter get[- ]?up", "Turkish Get Up - L"),
+    (r"kneel to stand|half kneeling to stand", "DB Reverse Lunge to Stand"),
+    (r"svend|crush(?:[- ]grip)? press", "Bench Press - Dumbbell"),
+    (r"military press", "Overhead Press - Seated - Dumbbell"),
+    (r"front rack (?:weighted )?march|dumbbell march|standing march|^march$", "Farmer's Walk - Dumbbell"),
+    (r"lateral (?:bound|leap|jump)|skaters?", "Lateral Barrier Jump"),
+    (r"broad jump", "Burpee Broad Jumps"),
+    (r"speed squats?|diagonal squats?|^squats$", "Squat - Dumbbell"),
+    (r"drop push", "Hand-Release Push-Ups"),
     (r"thruster|front squat to (?:overhead )?press", "Thruster - Dumbbell"),
     (r"devil press", "Devil Press"),
     (r"renegade row", "DB Renegade Row"),
@@ -63,7 +101,7 @@ MATCHERS = [
     (r"hip thrust", "Hip Thrust - Barbell"),
     (r"single[- ]leg (?:glute )?bridge|bridge march", "Glute Bridge - Single Leg - L"),
     (r"bridge press", "Bench Press - Dumbbell"),
-    (r"glute bridge|weighted bridge|\bbridge\b", "Glute Bridge"),
+    (r"glute bridge|weighted bridge|\bbridges?\b|^frog$|hamstring walkout", "Glute Bridge"),
     (r"back extension", "Back Extensions"),
     (r"step[- ]?up", "Step Up - Alternating - Dumbbell"),
     (r"calf raise", "Calf Raise - Standing"),
@@ -91,12 +129,12 @@ MATCHERS = [
     (r"halo|around the world", "Around the World - Dumbbell"),
     (r"handstand push", "Handstand Push-Ups"),
     (r"hand[- ]release push", "Hand-Release Push-Ups"),
-    (r"push-?ups?", "Hand-Release Push-Ups"),
+    (r"push[- ]?ups?", "Hand-Release Push-Ups"),
     (r"chest dip", "Chest Dip"),
     (r"\bdip", "Dip"),
     (r"burpee", "Burpees"),
     (r"side plank", "Side Plank - L"),
-    (r"\bplank\b", "Front Plank"),
+    (r"\bplanks?\b", "Front Plank"),
     (r"bicycle", "Bicycle Crunches"),
     (r"russian twist", "DB Russian Twist"),
     (r"dead ?bug", "Deadbug"),
@@ -107,7 +145,7 @@ MATCHERS = [
     (r"turkish get", "Turkish Get Up - L"),
     (r"wall ball", "MB Wall Ball"),
     (r"med(?:icine)? ball slam|overhead slam", "Overhead Slam - Med Ball"),
-    (r"hollow|beast|superman|wall sit|dead hang|donkey kick|glute kick|bird dog|mountain climber|v-sit|pike", "Other (generic reps-based core movement – last resort)"),
+    (r"hollow|beast|superman|wall sit|dead hang|donkey kick|glute kick|bird dog|mountain climber|v-sit|pike", OTHER),
     (r"\bcurl\b", "Bicep Curl - Dumbbell"),
 ]
 
@@ -125,6 +163,31 @@ def assign(phrase: str) -> str:
     for pattern, name in MATCHERS:
         if re.search(pattern, phrase, flags=re.I):
             return name
+    return ""
+
+
+def inherit_from_mapped(phrase: str, mapped: dict[str, str]) -> str:
+    """Use a mapped phrase that starts with this one, if every such phrase agrees."""
+    tokens = [part for part in re.split(r"[^a-z0-9]+", phrase) if part]
+    if not tokens or len(tokens) > 3:
+        return ""
+    if any(token in INHERIT_STOP for token in tokens):
+        return ""
+    if tokens[0] in {"regular", "repeat", "tempo", "combo", "notes"}:
+        return ""
+    stems = {phrase}
+    if phrase.endswith("s") and len(phrase) > 4:
+        stems.add(phrase[:-1])
+    else:
+        stems.add(phrase + "s")
+    hits: list[str] = []
+    for other, name in mapped.items():
+        if other == phrase:
+            continue
+        if any(other == stem or other.startswith(f"{stem} ") or other.startswith(f"{stem}/") for stem in stems):
+            hits.append(name)
+    if len(hits) >= 2 and len(set(hits)) == 1:
+        return hits[0]
     return ""
 
 
@@ -156,18 +219,23 @@ def main() -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     names = set(data["names"])
     rules: dict[str, str] = {}
-    mapped = 0
-    unmapped = 0
     for phrase in sorted(catalog_phrases()):
         whoop = assign(phrase)
         rules[phrase] = whoop if whoop in names else ""
-        if rules[phrase]:
-            mapped += 1
-        else:
-            unmapped += 1
+    mapped_now = {key: value for key, value in rules.items() if value}
+    inherited = 0
+    for phrase, value in rules.items():
+        if value:
+            continue
+        guess = inherit_from_mapped(phrase, mapped_now)
+        if guess in names:
+            rules[phrase] = guess
+            inherited += 1
+    mapped = sum(1 for value in rules.values() if value)
+    unmapped = len(rules) - mapped
     data["rules"] = rules
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Mapped {mapped} SeaTable phrases → Whoop names")
+    print(f"Mapped {mapped} SeaTable phrases → Whoop names ({inherited} inherited from similar phrases)")
     print(f"Unmapped {unmapped} (empty values; assign a name from `names`)")
 
 
