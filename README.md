@@ -4,7 +4,7 @@ A static page that turns [Apple Fitness+](https://fitness.apple.com) workouts in
 
 Unofficial, not affiliated with Apple or Whoop. Code is [AGPL-3.0](LICENSE). Move lists come from the public [Weekly Workouts SeaTable](https://cloud.seatable.io/dtable/external-links/d08506897d274835bdab/?tid=1vDI&vid=0000).
 
-Use it at https://daveisfera.github.io/fitness-plus-whoop/ or locally:
+Use it at https://inspector-dadget.github.io/fitness-plus-whoop/ or locally:
 
 ```bash
 python3 -m http.server 8080
