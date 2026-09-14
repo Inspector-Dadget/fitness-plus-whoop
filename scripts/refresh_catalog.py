@@ -55,6 +55,13 @@ MISSING_FIELDS = ("table", "_id", "Name", "Trainer", "Date", "Duration", "Ep", "
 HTTP_TIMEOUT = 30
 
 
+def jsonl_dumps(rows: list[dict]) -> str:
+    return "".join(
+        json.dumps(row, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n"
+        for row in rows
+    )
+
+
 def table_slug(table: str) -> str:
     return table.lower().replace(" ", "-")
 
@@ -293,10 +300,7 @@ def load_discovered() -> list[dict]:
 
 def write_discovered(records: list[dict]) -> None:
     records = sorted(records, key=lambda item: (item.get("table") or "", item.get("trainer") or "", item.get("appleId") or ""))
-    OUT_DISCOVERED.write_text(
-        "".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in records),
-        encoding="utf-8",
-    )
+    OUT_DISCOVERED.write_text(jsonl_dumps(records), encoding="utf-8")
 
 
 def pick_discovered_match(candidates: list[dict], date: str, duration: str, episode) -> dict | None:
@@ -385,10 +389,7 @@ def missing_rows(tables: dict[str, list[dict]]) -> list[dict]:
 
 def write_missing(tables: dict[str, list[dict]]) -> list[dict]:
     rows = missing_rows(tables)
-    OUT_MISSING.write_text(
-        "".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows),
-        encoding="utf-8",
-    )
+    OUT_MISSING.write_text(jsonl_dumps(rows), encoding="utf-8")
     return rows
 
 
@@ -396,10 +397,7 @@ def write_table_files(tables: dict[str, list[dict]]) -> dict[str, str]:
     files = {}
     for table, rows in tables.items():
         path = table_path(table)
-        path.write_text(
-            "".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows),
-            encoding="utf-8",
-        )
+        path.write_text(jsonl_dumps(rows), encoding="utf-8")
         files[table] = path.name
         print(f"Wrote {path} ({path.stat().st_size / 1024:.0f} KB, {len(rows)} rows)")
     return files
