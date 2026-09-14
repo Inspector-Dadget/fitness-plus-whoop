@@ -1,6 +1,9 @@
+{"Body Focus":"Total Body","Date":"2026-09-14","Duration":"20 min","Ep":218,"Music":"Hip-Hop/R&B","Name":"Strength with Kyle • Ep218","Trainer":"Kyle","_id":"IikAjZfqSk6ptT6JOm1Wng","table":"Strength"}
+{"Body Focus":"Upper Body","Date":"2026-09-14","Duration":"10 min","Ep":136,"Music":"Upbeat Anthems","Name":"Strength with Jenn • Ep136","Trainer":"Jenn","_id":"KdNVmUy-QCmbv5jMM1gB0Q","table":"Strength"}
+{"Body Focus":"Lower Body","Date":"2026-09-14","Duration":"30 min","Ep":198,"Music":"Everything Rock","Name":"Strength with Gregg • Ep198","Trainer":"Gregg","_id":"VUosHEzQS5mvuVIzUriSPQ","table":"Strength"}
 {"Body Focus":"Total Body","Date":"2026-09-07","Duration":"10 min","Ep":217,"Music":"Latest Hits","Name":"Strength with Kyle • Ep217","Trainer":"Kyle","_id":"RDaZ2YknQbWTAIQKl1u_YA","table":"Strength"}
-{"Date":"2026-09-07","Duration":"30 min","Ep":125,"Music":"Hip-Hop/R&B","Name":"Strength with Kim • Ep125","Trainer":"Kim","_id":"PSLHMN7pSeu_6vd17_U6XQ","table":"Strength"}
-{"Date":"2026-09-07","Duration":"20 min","Ep":135,"Music":"Throwback Hits","Name":"Strength with Jenn • Ep135","Trainer":"Jenn","_id":"HTqWUA2FQzyNDh_Jyt7RJQ","table":"Strength"}
+{"Body Focus":"Upper Body","Date":"2026-09-07","Duration":"30 min","Ep":125,"Music":"Hip-Hop/R&B","Name":"Strength with Kim • Ep125","Trainer":"Kim","_id":"PSLHMN7pSeu_6vd17_U6XQ","table":"Strength"}
+{"Body Focus":"Lower Body","Date":"2026-09-07","Duration":"20 min","Ep":135,"Music":"Throwback Hits","Name":"Strength with Jenn • Ep135","Trainer":"Jenn","_id":"HTqWUA2FQzyNDh_Jyt7RJQ","table":"Strength"}
 {"Body Focus":"Upper Body","Date":"2026-08-31","Duration":"20 min","Ep":124,"Music":"Latest Hits","Name":"Strength with Kim • Ep124","Trainer":"Kim","_id":"RC9g79rIRyeejZPFTA-vMg","table":"Strength"}
 {"Body Focus":"Total Body","Date":"2026-08-31","Duration":"30 min","Ep":134,"Music":"Upbeat Anthems","Name":"Strength with Jenn • Ep134","Trainer":"Jenn","_id":"WXwvlnHQTa-_F3hGHyHx0w","table":"Strength"}
 {"Body Focus":"Lower Body","Date":"2026-08-31","Duration":"10 min","Ep":197,"Music":"Throwback Hits","Name":"Strength with Gregg • Ep197","Trainer":"Gregg","_id":"OzSLwePORqeizEdWGfzHOw","table":"Strength"}
@@ -404,7 +407,8 @@
 {"Body Focus":"Total Body","Date":"2023-05-08","Duration":"30 min","Ep":17,"Music":"Upbeat Anthems","Name":"Strength with Jenn • Ep17","Trainer":"Jenn","_id":"WKgI_t2bSVa-o4oAP0iytw","table":"Strength"}
 {"Body Focus":"Lower Body","Date":"2023-04-24","Duration":"10 min","Ep":94,"Music":"Pure Dance","Name":"Strength with Kyle • Ep94","Trainer":"Kyle","_id":"ZAdDzJ7BQzSk9gVNo0-opg","table":"Strength"}
 {"Body Focus":"Lower Body","Date":"2023-04-17","Duration":"20 min","Ep":92,"Music":"Pure Dance","Name":"Strength with Gregg • Ep92","Trainer":"Gregg","_id":"cr_MlCZiRYir7clhDdH1Aw","table":"Strength"}
-{"Date":"2026-09-07","Name":"Core with  • Ep","_id":"ZIJ87_t4S56SSHPD_U8HXw","table":"Core"}
+{"Date":"2026-09-14","Duration":"20 min","Ep":97,"Music":"Upbeat Anthems","Name":"Core with Jenn • Ep97","Trainer":"Jenn","_id":"eTYKOncOQHiJ4A3bux_w9g","table":"Core"}
+{"Date":"2026-09-07","Duration":"5 min","Ep":96,"Music":"Top Country","Name":"Core with Jenn • Ep96","Trainer":"Jenn","_id":"ZIJ87_t4S56SSHPD_U8HXw","table":"Core"}
 {"Date":"2026-08-31","Duration":"20 min","Ep":95,"Music":"Upbeat Anthems","Name":"Core with Jenn • Ep95","Trainer":"Jenn","_id":"JsX12c23TACGiWx5C5FiZQ","table":"Core"}
 {"Date":"2026-08-24","Duration":"5 min","Ep":173,"Music":"Latest Hits","Name":"Core with Kyle • Ep173","Trainer":"Kyle","_id":"KxmvfAk8RiGtnWK3Rnlm2g","table":"Core"}
 {"Date":"2026-08-17","Duration":"10 min","Ep":66,"Music":"Pure Dance","Name":"Core with Molly • Ep66","Trainer":"Molly","_id":"Wlh6TBfKSumMmrIzyw2STw","table":"Core"}
@@ -659,8 +663,10 @@
 {"Date":"2023-05-01","Duration":"10 min","Ep":4,"Music":"Upbeat Anthems","Name":"Core with Jenn • Ep4","Trainer":"Jenn","_id":"BpSdpgU6RUipM3F8Yzxk3g","table":"Core"}
 {"Date":"2023-04-24","Duration":"10 min","Ep":77,"Music":"Latest Hits","Name":"Core with Gregg • Ep77","Trainer":"Gregg","_id":"DC-rLJHcTZqeO7e92eNdug","table":"Core"}
 {"Date":"2023-04-10","Duration":"5 min","Ep":83,"Music":"Latest Hits","Name":"Core with Kyle • Ep83","Trainer":"Kyle","_id":"AzMQhIJIQWSd-zYOCVvMBg","table":"Core"}
-{"Date":"2026-09-07","_id":"UU1R1mNjRByxhsq1MFigZg","table":"HIIT"}
-{"Date":"2026-09-07","_id":"FV208_FpR2SxL4ObBQhzXQ","table":"HIIT"}
+{"Date":"2026-09-14","Duration":"10 min","Ep":212,"Music":"Upbeat Anthems","Trainer":"Bakari","_id":"NWc4GvQHTx6UFPKlVp5kRw","table":"HIIT"}
+{"Date":"2026-09-14","Duration":"20 min","Ep":192,"Music":"Hip-Hop/R&B","Trainer":"Anja","_id":"I0eD8S9nRYaKiuqXWSpAnw","table":"HIIT"}
+{"Date":"2026-09-07","Duration":"20 min","Ep":148,"Music":"Upbeat Anthems","Trainer":"Jamie-Ray","_id":"FV208_FpR2SxL4ObBQhzXQ","table":"HIIT"}
+{"Date":"2026-09-07","Duration":"10 min","Ep":144,"Music":"Pure Dance","Trainer":"Brian","_id":"UU1R1mNjRByxhsq1MFigZg","table":"HIIT"}
 {"Date":"2026-08-31","Duration":"20 min","Ep":195,"Music":"Throwback Hits","Trainer":"Kim","_id":"THZdSWLbTMGHLiRI1J3eGA","table":"HIIT"}
 {"Date":"2026-08-31","Duration":"10 min","Ep":191,"Music":"Latin Grooves","Trainer":"Anja","_id":"Jtb2kVb6TD28wRZb4x229g","table":"HIIT"}
 {"Date":"2026-08-24","Duration":"10 min","Ep":147,"Music":"Upbeat Anthems","Trainer":"Jamie-Ray","_id":"GV5oXsepTH68brewZV4RCA","table":"HIIT"}
@@ -1061,7 +1067,9 @@
 {"Date":"2023-05-01","Duration":"10 min","Ep":107,"Music":"Latest Hits","Trainer":"Bakari","_id":"XLev6LhvTJqL4_nAUK7fsQ","table":"HIIT"}
 {"Date":"2023-04-24","Duration":"30 min","Ep":106,"Music":"Hip-Hop/R&B","Trainer":"Bakari","_id":"UqVB85tuTgisFtgz03uFzQ","table":"HIIT"}
 {"Date":"2023-04-10","Duration":"20 min","Ep":17,"Music":"Everything Rock","Trainer":"Brian","_id":"UTHY5ajGTDedHOZrBRzaCw","table":"HIIT"}
-{"Date":"2026-09-07","Name":"Pilates with  • Ep","_id":"BH0TQTsIQhuSBWm70wZyew","table":"Pilates"}
+{"Date":"2026-09-14","Duration":"10 min","Ep":258,"Music":"K-Pop","Name":"Pilates with Marimba • Ep258","Trainer":"Marimba","_id":"BohJABjGRf2a2XbyHm2sQQ","table":"Pilates"}
+{"Date":"2026-09-14","Duration":"20 min","Ep":242,"Music":"Latest Hits","Name":"Pilates with Darryl • Ep242","Trainer":"Darryl","_id":"MhO345UlTLaZMdG-zl-iyw","table":"Pilates"}
+{"Date":"2026-09-07","Duration":"30 min","Ep":257,"Music":"Upbeat Anthems","Name":"Pilates with Marimba • Ep257","Trainer":"Marimba","_id":"BH0TQTsIQhuSBWm70wZyew","table":"Pilates"}
 {"Date":"2026-08-31","Duration":"20 min","Ep":256,"Music":"Throwback Hits","Name":"Pilates with Marimba • Ep256","Trainer":"Marimba","_id":"WpfEz1pFSUCSs8oJnRsUGA","table":"Pilates"}
 {"Date":"2026-08-31","Duration":"30 min","Ep":241,"Music":"Everything Rock","Name":"Pilates with Darryl • Ep241","Trainer":"Darryl","_id":"CqPDgb84Q-edoC0dn_wNKA","table":"Pilates"}
 {"Date":"2026-08-24","Duration":"10 min","Ep":255,"Music":"Latin Grooves","Name":"Pilates with Marimba • Ep255","Trainer":"Marimba","_id":"B5eLHfeERASBV0N0uDzsfw","table":"Pilates"}
@@ -1344,7 +1352,8 @@
 {"Date":"2023-05-01","Duration":"30 min","Ep":89,"Music":"Hip-Hop/R&B","Name":"Pilates with Marimba • Ep89","Trainer":"Marimba","_id":"AIW8BwVYSOa1OUIVzONvpQ","table":"Pilates"}
 {"Body Focus":"Upper Body","Date":"2023-04-24","Duration":"20 min","Ep":86,"Music":"Hip-Hop/R&B","Name":"Pilates with Darryl • Ep86","Trainer":"Darryl","_id":"CaHWfEVkQ1Cq_cqalUUzzA","table":"Pilates"}
 {"Body Focus":"Core","Date":"2023-04-17","Duration":"20 min","Ep":85,"Music":"Upbeat Anthems","Name":"Pilates with Darryl • Ep85","Trainer":"Darryl","_id":"d4_J39iYTkC0IxLKh9mNKw","table":"Pilates"}
-{"Date":"2026-09-07","_id":"WVznVADkT7WtrXLWeyp0xA","table":"Kickboxing"}
+{"Date":"2026-09-14","Duration":"10 min","Ep":190,"Music":"Upbeat Anthems","Trainer":"Jamie-Ray","_id":"fHGl9ljaTtyGMNSl02KWOA","table":"Kickboxing"}
+{"Date":"2026-09-07","Duration":"20 min","Ep":146,"Music":"Pure Dance","Trainer":"Nez","_id":"WVznVADkT7WtrXLWeyp0xA","table":"Kickboxing"}
 {"Date":"2026-08-31","Duration":"30 min","Ep":189,"Music":"Hip-Hop/R&B","Trainer":"Jamie-Ray","_id":"dObMHv4mSwaTsDffMkKcwg","table":"Kickboxing"}
 {"Date":"2026-08-24","Duration":"10 min","Ep":145,"Music":"Upbeat Anthems","Trainer":"Nez","_id":"es59AR9-Rauazyo4cgwoBA","table":"Kickboxing"}
 {"Date":"2026-08-17","Duration":"20 min","Ep":188,"Music":"Everything Rock","Trainer":"Jamie-Ray","_id":"RkfI1OcXRSu147aTQOUA0A","table":"Kickboxing"}
