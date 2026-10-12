@@ -1,21 +1,24 @@
 # Catalog audit
 
-Generated 2026-10-05 21:51 UTC.
+Generated 2026-10-12 22:24 UTC.
 
 Inferred `Format` when SeaTable left it blank. Apple IDs come from `Link`, [`overrides.jsonl`](overrides.jsonl), and [`discovered-urls.jsonl`](discovered-urls.jsonl). Remaining gaps are in [`missing.jsonl`](missing.jsonl).
 
 | Table | Rows | With move script | Missing Apple ID | DBs but no per-move weight |
 | --- | ---: | ---: | ---: | ---: |
-| Strength | 928 | 925 | 418 | 802 |
-| Core | 639 | 46 | 260 | 10 |
-| HIIT | 900 | 0 | 410 | 0 |
-| Pilates | 503 | 24 | 288 | 0 |
-| Kickboxing | 339 | 18 | 291 | 0 |
+| Strength | 931 | 925 | 421 | 802 |
+| Core | 640 | 46 | 261 | 10 |
+| HIIT | 902 | 0 | 412 | 0 |
+| Pilates | 504 | 24 | 289 | 0 |
+| Kickboxing | 340 | 18 | 292 | 0 |
 
 ## Highest-value gaps
 
 ### Strength: recent rows without Apple ID
 
+- 2026-10-12 — Strength with Jenn • Ep139 (10 min)
+- 2026-10-12 — Strength with Gregg • Ep202 (30 min)
+- 2026-10-12 — Strength with Kyle • Ep221 (20 min)
 - 2026-10-05 — Strength with Jenn • Ep138 (20 min)
 - 2026-10-05 — Strength with Gregg • Ep201 (30 min)
 - 2026-10-05 — Strength with Kyle • Ep220 (10 min)
@@ -25,9 +28,6 @@ Inferred `Format` when SeaTable left it blank. Apple IDs come from `Link`, [`ove
 - 2026-09-24 — Strength with Kim • Ep126 (20 min)
 - 2026-09-21 — Strength with Gregg • Ep199 (10 min)
 - 2026-09-21 — Strength with Kyle • Ep219 (30 min)
-- 2026-09-14 — Strength with Jenn • Ep136 (10 min)
-- 2026-09-14 — Strength with Gregg • Ep198 (30 min)
-- 2026-09-14 — Strength with Kyle • Ep218 (20 min)
 
 ### Strength: move scripts without light/medium/heavy tags
 
@@ -46,6 +46,7 @@ Inferred `Format` when SeaTable left it blank. Apple IDs come from `Link`, [`ove
 
 ### Core: recent rows without Apple ID
 
+- 2026-10-12 — Core with Kyle • Ep175 (10 min)
 - 2026-10-05 — Core with Jenn • Ep98 (5 min)
 - 2026-09-28 — Core with Gregg • Ep158 (20 min)
 - 2026-09-21 — Core with Gregg • Ep157 (10 min)
@@ -57,10 +58,11 @@ Inferred `Format` when SeaTable left it blank. Apple IDs come from `Link`, [`ove
 - 2026-08-17 — Core with Molly • Ep66 (10 min)
 - 2026-08-10 — Core with Gregg • Ep156 (10 min)
 - 2026-08-03 — Core with Gregg • Ep155 (20 min)
-- 2026-08-03 — Core with Kyle • Ep172 (10 min)
 
 ### HIIT: recent rows without Apple ID
 
+- 2026-10-12 — Untitled (20 min)
+- 2026-10-12 — Untitled (10 min)
 - 2026-10-05 — Untitled (20 min)
 - 2026-10-05 — Untitled (30 min)
 - 2026-09-28 — Untitled (10 min)
@@ -71,7 +73,5 @@ Inferred `Format` when SeaTable left it blank. Apple IDs come from `Link`, [`ove
 - 2026-09-14 — Untitled (10 min)
 - 2026-09-07 — Untitled (10 min)
 - 2026-09-07 — Untitled (20 min)
-- 2026-08-31 — Untitled (10 min)
-- 2026-08-31 — Untitled (20 min)
 
 The page infers Light vs Heavy from movement type when a script has no per-move tags.
